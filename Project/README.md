@@ -33,7 +33,7 @@ pnpm run build
 - `--coral`：高压力和风险提示。
 - `--slate`：工业用水及第四类信息。
 
-地图分级色位于 [`src/components/WorldMap.vue`](src/components/WorldMap.vue) 的 `WATER_STRESS_RANGES` 与 `QUANTILE_COLORS`；区域散点色位于 [`src/metricConfig.ts`](src/metricConfig.ts) 的 `regionColors`。
+水压力的官方五档及配色位于 [`src/metricConfig.ts`](src/metricConfig.ts) 的 `waterStressCategories`，地图与国家卡片共用该配置；其他地图指标的分级色位于 [`src/components/WorldMap.vue`](src/components/WorldMap.vue) 的 `QUANTILE_COLORS`，区域散点色位于 [`src/metricConfig.ts`](src/metricConfig.ts) 的 `regionColors`。
 
 ### 世界地图
 
@@ -61,7 +61,7 @@ pnpm run build
 - `.sector-chart-wrap`：图表整体高度。
 - `.sector-total`：中心数值位置和字号。它的 `left`、`top` 应与 `sectorChartStyle.center` 保持一致。
 - `.mini-heading`：03 下半部分两个分区标题与右侧说明文字。
-- `.comparison-label`、`.benchmark-track`：区域基准的标签、数值、单位字号和基准线粗细。
+- `.comparison-label`、`.benchmark-track`：区域基准的标签、数值、单位字号和基准线粗细；区域平均线固定在轨道中点，国家条长度表示该国相对区域平均值的位置。
 
 ### 页面文字
 

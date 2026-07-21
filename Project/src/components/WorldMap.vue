@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts'
 import type { CountryYearRecord, MapRangeFilter, MetricKey, MetricRange } from '../types'
-import { formatMetric, metricDefinitions } from '../metricConfig'
+import { formatMetric, metricDefinitions, waterStressCategories } from '../metricConfig'
 
 const props = defineProps<{
   data: CountryYearRecord[]
@@ -51,15 +51,6 @@ interface RangeDefinition extends MetricRange {
   color: string
 }
 
-// SDG 6.4.2 官方水压力分级。100% 属于 High，只有 >100% 才属于 Critical。
-const WATER_STRESS_RANGES: RangeDefinition[] = [
-  { min: 0, max: 25, includeMin: true, includeMax: false, label: 'No stress (<25%)', color: '#4e877c' },
-  { min: 25, max: 50, includeMin: true, includeMax: false, label: 'Low stress (25–50%)', color: '#86aa94' },
-  { min: 50, max: 75, includeMin: true, includeMax: false, label: 'Medium stress (50–75%)', color: '#c5c6a0' },
-  { min: 75, max: 100, includeMin: true, includeMax: true, label: 'High stress (75–100%)', color: '#d6a26f' },
-  { min: 100, max: Number.POSITIVE_INFINITY, includeMin: false, includeMax: false, label: 'Critical stress (>100%)', color: '#c87460' },
-]
-
 const QUANTILE_COLORS = ['#c87460', '#d6a26f', '#c5c6a0', '#86aa94', '#4e877c']
 
 function isValueInRange(value: number, range: MetricRange): boolean {
@@ -79,7 +70,7 @@ function toVisualPiece(range: RangeDefinition): Record<string, string | number> 
 }
 
 const rangeDefinitions = computed<RangeDefinition[]>(() => {
-  if (props.metric === 'waterStress') return WATER_STRESS_RANGES
+  if (props.metric === 'waterStress') return waterStressCategories
 
   const values = props.data
     .map((record) => record[props.metric] as number)

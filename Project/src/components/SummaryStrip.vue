@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { CountryYearRecord } from '../types'
-import { formatPlain } from '../metricConfig'
+import { formatPlain, getWaterStressCategory, waterStressCategories } from '../metricConfig'
 
 const props = defineProps<{
   data: CountryYearRecord[]
   selectedRegion: string
 }>()
 
+const criticalStressCategory = waterStressCategories[waterStressCategories.length - 1]
+
 const summary = computed(() => {
-  if (!props.data.length) return { averageStress: 0, withdrawal: 0, highStress: 0, population: 0 }
+  if (!props.data.length) return { averageStress: 0, withdrawal: 0, criticalStress: 0, population: 0 }
   return {
     averageStress: props.data.reduce((sum, record) => sum + record.waterStress, 0) / props.data.length,
     withdrawal: props.data.reduce((sum, record) => sum + record.totalWaterWithdrawal, 0),
-    highStress: props.data.filter((record) => record.waterStress >= 80).length,
+    criticalStress: props.data.filter((record) => getWaterStressCategory(record.waterStress) === criticalStressCategory).length,
     population: props.data.reduce((sum, record) => sum + record.population, 0),
   }
 })
@@ -37,9 +39,9 @@ const summary = computed(() => {
       <i class="swatch withdrawal"></i>
     </div>
     <div class="summary-item">
-      <span>High-stress signals</span>
-      <strong>{{ summary.highStress }}<small> countries</small></strong>
-      <i class="swatch signal"></i>
+      <span>Critical-stress signals</span>
+      <strong>{{ summary.criticalStress }}<small> countries</small></strong>
+      <i class="swatch signal" :style="{ background: criticalStressCategory.color }"></i>
     </div>
     <div class="summary-item">
       <span>Population represented</span>
@@ -120,7 +122,6 @@ const summary = computed(() => {
 
 .stress { background: var(--coral); }
 .withdrawal { background: var(--teal); }
-.signal { background: var(--sand); }
 .population { background: var(--slate); }
 
 @media (max-width: 950px) {

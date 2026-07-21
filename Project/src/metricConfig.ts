@@ -1,4 +1,29 @@
-import type { MetricDefinition, MetricKey } from './types'
+import type { MetricDefinition, MetricKey, MetricRange } from './types'
+
+export interface WaterStressCategory extends MetricRange {
+  name: string
+  label: string
+  color: string
+  surface: string
+  foreground: string
+}
+
+// SDG 6.4.2 water-stress categories. 100% is High; only values above 100% are Critical.
+export const waterStressCategories: WaterStressCategory[] = [
+  { min: 0, max: 25, includeMin: true, includeMax: false, name: 'No stress', label: 'No stress (<25%)', color: '#4e877c', surface: '#edf4f2', foreground: '#355f57' },
+  { min: 25, max: 50, includeMin: true, includeMax: false, name: 'Low stress', label: 'Low stress (25–50%)', color: '#86aa94', surface: '#f0f4ed', foreground: '#57725f' },
+  { min: 50, max: 75, includeMin: true, includeMax: false, name: 'Medium stress', label: 'Medium stress (50–75%)', color: '#c5c6a0', surface: '#f4f2e6', foreground: '#6d6a3f' },
+  { min: 75, max: 100, includeMin: true, includeMax: true, name: 'High stress', label: 'High stress (75–100%)', color: '#d6a26f', surface: '#f8efe5', foreground: '#8a5a31' },
+  { min: 100, max: Number.POSITIVE_INFINITY, includeMin: false, includeMax: false, name: 'Critical stress', label: 'Critical stress (>100%)', color: '#c87460', surface: '#f6eae6', foreground: '#884c40' },
+]
+
+export function getWaterStressCategory(value: number): WaterStressCategory {
+  return waterStressCategories.find((category) => {
+    const meetsMinimum = category.includeMin ? value >= category.min : value > category.min
+    const meetsMaximum = category.includeMax ? value <= category.max : value < category.max
+    return meetsMinimum && meetsMaximum
+  }) ?? waterStressCategories[0]
+}
 
 export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
   population: {

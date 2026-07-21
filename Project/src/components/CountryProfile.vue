@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import type { CountryYearRecord, MetricKey } from '../types'
-import { formatMetric, formatPlain, metricDefinitions } from '../metricConfig'
+import { formatMetric, formatPlain, getWaterStressCategory, metricDefinitions } from '../metricConfig'
 
 const props = defineProps<{
   data: CountryYearRecord[]
@@ -24,8 +24,11 @@ const sectorChartStyle = {
 }
 
 function average(key: MetricKey): number {
-  if (!regionalData.value.length) return 0
-  return regionalData.value.reduce((sum, item) => sum + (item[key] as number), 0) / regionalData.value.length
+  const values = regionalData.value
+    .map((item) => item[key] as number)
+    .filter(Number.isFinite)
+  if (!values.length) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 
 const rank = computed(() => {
@@ -35,13 +38,7 @@ const rank = computed(() => {
     .findIndex((item) => item.country === record.value?.country) + 1
 })
 
-const stressLabel = computed(() => {
-  const value = record.value?.waterStress ?? 0
-  if (value >= 100) return 'Critical pressure'
-  if (value >= 80) return 'High pressure'
-  if (value >= 40) return 'Elevated pressure'
-  return 'Lower pressure'
-})
+const stressCategory = computed(() => getWaterStressCategory(record.value?.waterStress ?? 0))
 
 const sectorOption = computed(() => {
   if (!record.value) return {}
@@ -88,12 +85,22 @@ const comparisons = computed(() => {
     { label: 'Water stress', value: selected.waterStress, benchmark: average('waterStress'), unit: '%' },
     { label: 'Use efficiency', value: selected.waterUseEfficiency, benchmark: average('waterUseEfficiency'), unit: 'index' },
     { label: 'Resources / capita', value: selected.renewableWaterResources / selected.population, benchmark: averagePerCapita(), unit: 'thousand m³' },
-  ].map((item) => ({ ...item, max: Math.max(item.value, item.benchmark, 1) * 1.15 }))
+  ].map((item) => ({
+    ...item,
+    // The regional mean is the fixed midpoint; the country bar is expressed relative to it.
+    countryPosition: item.benchmark > 0
+      ? Math.min(Math.max(item.value / item.benchmark * 50, 0), 100)
+      : item.value > 0 ? 100 : 50,
+  }))
 })
 
 function averagePerCapita(): number {
-  if (!regionalData.value.length) return 0
-  return regionalData.value.reduce((sum, item) => sum + item.renewableWaterResources / item.population, 0) / regionalData.value.length
+  const values = regionalData.value
+    .filter((item) => item.population > 0)
+    .map((item) => item.renewableWaterResources / item.population)
+    .filter(Number.isFinite)
+  if (!values.length) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 </script>
 
@@ -113,11 +120,18 @@ function averagePerCapita(): number {
         </div>
       </header>
 
-      <div class="signal-banner">
+      <div
+        class="signal-banner"
+        :style="{
+          '--stress-color': stressCategory.color,
+          '--stress-surface': stressCategory.surface,
+          '--stress-foreground': stressCategory.foreground,
+        }"
+      >
         <div class="signal-mark"></div>
         <div>
           <span>Water stress lens</span>
-          <strong>{{ stressLabel }}</strong>
+          <strong>{{ stressCategory.name }}</strong>
         </div>
         <b>{{ formatMetric(record.waterStress, 'waterStress') }}</b>
       </div>
@@ -160,18 +174,24 @@ function averagePerCapita(): number {
       </div>
 
       <div class="profile-section compare-section">
-        <div class="mini-heading">
-          <strong>Regional benchmark</strong>
-          <span>country <i></i> region avg</span>
+        <div class="mini-heading benchmark-heading">
+          <div>
+            <strong>Regional benchmark</strong>
+            <small>{{ record.region }} · {{ record.year }} · {{ regionalData.length }}-country scope</small>
+          </div>
+          <span><i class="country-key"></i> country <i class="average-key"></i> region avg</span>
         </div>
         <div v-for="item in comparisons" :key="item.label" class="comparison-row">
           <div class="comparison-label">
             <span>{{ item.label }}</span>
-            <b>{{ formatPlain(item.value, 1) }} <small>{{ item.unit }}</small></b>
+            <div class="comparison-values">
+              <b>{{ formatPlain(item.value, 1) }} <small>{{ item.unit }}</small></b>
+              <em>avg {{ formatPlain(item.benchmark, 1) }}</em>
+            </div>
           </div>
           <div class="benchmark-track">
-            <span class="country-bar" :style="{ width: `${item.value / item.max * 100}%` }"></span>
-            <i :style="{ left: `${item.benchmark / item.max * 100}%` }"></i>
+            <span class="country-bar" :style="{ width: `${item.countryPosition}%` }"></span>
+            <i class="average-marker"></i>
           </div>
         </div>
       </div>
@@ -189,12 +209,12 @@ function averagePerCapita(): number {
 .rank-chip span, .rank-chip small { display: block; color: #607a78; font-size: 11px; }
 .rank-chip strong { display: block; margin: 2px 0; color: var(--teal-dark); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.signal-banner { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin: 16px 0; padding: 12px 14px; border-left: 3px solid var(--coral); background: #f6ece7; }
-.signal-mark { width: 9px; height: 9px; border-radius: 50%; background: var(--coral); box-shadow: 0 0 0 4px rgba(199, 115, 94, .13); }
+.signal-banner { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin: 16px 0; padding: 12px 14px; border-left: 3px solid var(--stress-color); background: var(--stress-surface); }
+.signal-mark { width: 9px; height: 9px; border-radius: 50%; background: var(--stress-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--stress-color) 18%, transparent); }
 .signal-banner div:nth-child(2) { display: grid; gap: 2px; }
-.signal-banner span { color: #7b5e55; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
-.signal-banner strong { color: #684b43; font-size: 13px; }
-.signal-banner b { color: #884c40; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.signal-banner span { color: var(--stress-foreground); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+.signal-banner strong { color: var(--stress-foreground); font-size: 13px; }
+.signal-banner b { color: var(--stress-foreground); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .indicator-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
 .indicator { padding: 13px 14px; display: grid; gap: 3px; }
@@ -208,7 +228,7 @@ function averagePerCapita(): number {
 .mini-heading { display: flex; align-items: center; justify-content: space-between; }
 .mini-heading strong { color: #294a4f; font-size: 14px; font-weight: 700; line-height: 1.3; }
 .mini-heading span { color: #607477; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .065em; }
-.mini-heading i { display: inline-block; width: 2px; height: 9px; margin: 0 3px; background: var(--coral); vertical-align: middle; }
+.mini-heading i { display: inline-block; margin: 0 3px; vertical-align: middle; }
 .sector-chart-wrap { position: relative; height: 154px; }
 .sector-chart { width: 100%; height: 100%; }
 .sector-total {
@@ -231,7 +251,15 @@ function averagePerCapita(): number {
 .comparison-label span { color: #52696d; font-size: 12px; line-height: 1.35; }
 .comparison-label b { color: #24464c; font-size: 13px; font-weight: 750; }
 .comparison-label small { color: #607679; font-size: 11px; font-weight: 500; }
+.benchmark-heading { align-items: flex-start; gap: 12px; }
+.benchmark-heading > div { display: grid; gap: 2px; }
+.benchmark-heading small { color: #718386; font-size: 10px; line-height: 1.35; }
+.benchmark-heading > span { flex: none; padding-top: 1px; }
+.country-key { width: 8px; height: 5px; border-radius: 3px; background: var(--teal); }
+.average-key { width: 2px; height: 9px; background: var(--coral); }
+.comparison-values { display: flex; align-items: baseline; gap: 8px; }
+.comparison-values em { color: var(--coral); font-size: 10px; font-style: normal; font-weight: 650; }
 .benchmark-track { position: relative; height: 6px; border-radius: 4px; background: #e7ecea; }
 .country-bar { display: block; height: 100%; border-radius: inherit; background: var(--teal); }
-.benchmark-track i { position: absolute; top: -3px; width: 2px; height: 11px; border-radius: 1px; background: var(--coral); transform: translateX(-1px); }
+.benchmark-track .average-marker { position: absolute; top: -3px; left: 50%; width: 2px; height: 11px; border-radius: 1px; background: var(--coral); transform: translateX(-1px); }
 </style>

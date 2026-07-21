@@ -38,7 +38,9 @@ const analysisData = computed(() => {
   return filteredData.value.filter((record) => {
     const value = record[selectedMetric.value] as number
     return activeMetricRanges.value?.some((range) => {
-      return value >= range.min && (range.includeMax ? value <= range.max : value < range.max)
+      const meetsMinimum = range.includeMin ? value >= range.min : value > range.min
+      const meetsMaximum = range.includeMax ? value <= range.max : value < range.max
+      return meetsMinimum && meetsMaximum
     })
   })
 })

@@ -33,7 +33,7 @@ pnpm run build
 - `--coral`：高压力和风险提示。
 - `--slate`：工业用水及第四类信息。
 
-地图分级色位于 [`src/components/WorldMap.vue`](src/components/WorldMap.vue) 的 `colorRamp`；区域散点色位于 [`src/metricConfig.ts`](src/metricConfig.ts) 的 `regionColors`。
+地图分级色位于 [`src/components/WorldMap.vue`](src/components/WorldMap.vue) 的 `WATER_STRESS_RANGES` 与 `QUANTILE_COLORS`；区域散点色位于 [`src/metricConfig.ts`](src/metricConfig.ts) 的 `regionColors`。
 
 ### 世界地图
 
@@ -44,6 +44,7 @@ pnpm run build
 - `MAP_LAYOUT.aspectScale`：地图纵横比例；数值越小越偏横向。
 - `MAP_LAYOUT.zoom`：初始缩放级别，不影响用户后续拖拽和滚轮缩放。
 - `.map-panel`、`.chart-stage`：地图面板与画布的最小高度。
+- 水压力采用 SDG 6.4.2 固定五档：No stress（<25%）、Low（25%–50%）、Medium（50%–75%）、High（75%–100%）、Critical（>100%）；其他指标继续按当前数据的分位数分档。
 - 地图底部的颜色分段可以点击启用或排除数值范围；关闭后的国家使用 `visualMap.outOfRange` 中的灰色。
 - 颜色分段的选中状态和数值区间由 `WorldMap.vue` 的 `handleRangeSelection` 发出，再由 [`src/pages/ExplorerPage.vue`](src/pages/ExplorerPage.vue) 的 `analysisData` 同步给摘要、04 排名、05 散点和结论区。
 - `range-filter-note` 控制地图底部的操作说明与当前筛选国家数量。

@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts'
-import type { CountryYearRecord, MapRangeFilter, MetricKey } from '../types'
+import type { CountryYearRecord, MapRangeFilter, MetricKey, MetricRange } from '../types'
 import { formatMetric, metricDefinitions } from '../metricConfig'
 
 const props = defineProps<{
@@ -46,13 +46,80 @@ const geoFeatures = computed(() => {
   return geo ? geo.features : []
 })
 
-// 指标值范围（保持不变，但颜色不再依赖 extent 的线性渐变）
-const extent = computed(() => {
-  const values = props.data.map((record) => record[props.metric] as number)
-  return {
-    min: Math.min(...values, 0),
-    max: Math.max(...values, 1),
+interface RangeDefinition extends MetricRange {
+  label: string
+  color: string
+}
+
+// SDG 6.4.2 官方水压力分级。100% 属于 High，只有 >100% 才属于 Critical。
+const WATER_STRESS_RANGES: RangeDefinition[] = [
+  { min: 0, max: 25, includeMin: true, includeMax: false, label: 'No stress (<25%)', color: '#4e877c' },
+  { min: 25, max: 50, includeMin: true, includeMax: false, label: 'Low stress (25–50%)', color: '#86aa94' },
+  { min: 50, max: 75, includeMin: true, includeMax: false, label: 'Medium stress (50–75%)', color: '#c5c6a0' },
+  { min: 75, max: 100, includeMin: true, includeMax: true, label: 'High stress (75–100%)', color: '#d6a26f' },
+  { min: 100, max: Number.POSITIVE_INFINITY, includeMin: false, includeMax: false, label: 'Critical stress (>100%)', color: '#c87460' },
+]
+
+const QUANTILE_COLORS = ['#c87460', '#d6a26f', '#c5c6a0', '#86aa94', '#4e877c']
+
+function isValueInRange(value: number, range: MetricRange): boolean {
+  const meetsMinimum = range.includeMin ? value >= range.min : value > range.min
+  const meetsMaximum = range.includeMax ? value <= range.max : value < range.max
+  return meetsMinimum && meetsMaximum
+}
+
+function toVisualPiece(range: RangeDefinition): Record<string, string | number> {
+  const piece: Record<string, string | number> = {
+    label: range.label,
+    color: range.color,
   }
+  if (Number.isFinite(range.min)) piece[range.includeMin ? 'gte' : 'gt'] = range.min
+  if (Number.isFinite(range.max)) piece[range.includeMax ? 'lte' : 'lt'] = range.max
+  return piece
+}
+
+const rangeDefinitions = computed<RangeDefinition[]>(() => {
+  if (props.metric === 'waterStress') return WATER_STRESS_RANGES
+
+  const values = props.data
+    .map((record) => record[props.metric] as number)
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b)
+  if (!values.length) return []
+
+  const segmentCount = Math.min(5, new Set(values).size)
+  const percentile = (position: number) => values[Math.floor(position * (values.length - 1))]
+  const rawBreaks = [Math.min(values[0], 0)]
+  for (let index = 1; index < segmentCount; index += 1) {
+    rawBreaks.push(percentile(index / segmentCount))
+  }
+  rawBreaks.push(values[values.length - 1])
+
+  const breaks = rawBreaks.filter((value, index) => index === 0 || value > rawBreaks[index - 1])
+  if (breaks.length === 1) {
+    return [{
+      min: breaks[0],
+      max: breaks[0],
+      includeMin: true,
+      includeMax: true,
+      color: QUANTILE_COLORS[QUANTILE_COLORS.length - 1],
+      label: formatMetric(breaks[0], props.metric, true),
+    }]
+  }
+
+  return breaks.slice(0, -1).map((min, index) => {
+    const max = breaks[index + 1]
+    const includeMax = index === breaks.length - 2
+    const colorIndex = Math.round(index * (QUANTILE_COLORS.length - 1) / (breaks.length - 2))
+    return {
+      min,
+      max,
+      includeMin: true,
+      includeMax,
+      color: QUANTILE_COLORS[colorIndex],
+      label: `${formatMetric(min, props.metric, true)} – ${formatMetric(max, props.metric, true)}`,
+    }
+  })
 })
 
 function getFeatureISO3(feature: any): string | undefined {
@@ -87,64 +154,6 @@ const mapData = computed(() => {
 })
 
 const option = computed(() => {
-  const definition = metricDefinitions[props.metric]
-  const { min, max } = extent.value
-
-  // ---------- 分位数分段逻辑 ----------
-  const values = props.data
-    .map(r => r[props.metric] as number)
-    .filter(v => v !== undefined && v !== null && !isNaN(v))
-    .sort((a, b) => a - b)
-
-  const len = values.length
-  // 分段数量：5 段（可根据需要改为 4 或 6）
-  const SEGMENTS: number = 5
-  // 计算分位点 (从 0 到 1)
-  function percentile(p: number): number {
-    if (len === 0) return 0
-    const index = Math.floor(p * (len - 1))
-    return values[index]
-  }
-
-  const breaks: number[] = []
-  for (let i = 0; i <= SEGMENTS; i++) {
-    breaks.push(percentile(i / SEGMENTS))
-  }
-  // 确保全覆盖（最小值可能会略大于实际min，使用实际min）
-  breaks[0] = min
-  breaks[breaks.length - 1] = max
-
-const isWaterStress = props.metric === 'waterStress'
-const colorRamp = isWaterStress
-  ? ['#4e877c','#86aa94','#c5c6a0','#d6a26f','#c87460']   // 低压力→高压力
-  : ['#c87460','#d6a26f','#c5c6a0','#86aa94','#4e877c']   // 高数值→低数值
-  if (SEGMENTS === 4) {
-    colorRamp.pop()
-  } else if (SEGMENTS === 6) {
-    colorRamp.splice(3, 0, '#ad554f')
-  }
-
-  // 构造 pieces（分段图例）
-  const pieces = breaks.slice(0, -1).map((b, i) => {
-    const minVal = b
-    const maxVal = breaks[i + 1]
-    // 最后一段包含最大值
-    const maxInclusive = i === breaks.length - 2
-    return {
-      min: minVal,
-      max: maxInclusive ? maxVal : maxVal, // 默认max是开区间；我们使用闭区间，ECharts会处理
-      color: colorRamp[i],
-      label: `${formatMetric(minVal, props.metric, true)} – ${formatMetric(maxVal, props.metric, true)}`
-    }
-  })
-
-  // 补充：若数据量太少，改用连续模式
-  if (len < 10) {
-    pieces.length = 0
-    // 退化到连续（用户可自行决定）
-  }
-  // -----------------------------------
-
   return {
     textStyle: { fontFamily: 'Segoe UI Variable, Segoe UI, sans-serif' },
     tooltip: {
@@ -166,9 +175,9 @@ const colorRamp = isWaterStress
     ].filter(Boolean).join('<br/>')
   }, },
     visualMap: {
-      // 使用分段（piecewise）代替连续
       type: 'piecewise',
       orient: 'horizontal',
+      inverse: false,
       left: 22,
       bottom: 8,
       itemWidth: 18,
@@ -176,11 +185,7 @@ const colorRamp = isWaterStress
       textStyle: { color: '#55696b', fontSize: 12 },
       selected: props.rangeSelection || undefined,
       outOfRange: { color: '#d8ddda', opacity: 0.92 },
-      // 取消“连续模式”的 calculable
-      // 使用上面计算出的 pieces
-      pieces: pieces,
-      // 显示数值标签（或改为自定义）
-      formatter: undefined, // 让 ECharts 自动显示范围
+      pieces: rangeDefinitions.value.map(toVisualPiece),
     },
     series: [{
       type: 'map',
@@ -218,13 +223,11 @@ const rangeFilterActive = computed(() => {
 
 const activeCountryCount = computed(() => {
   if (!rangeFilterActive.value) return props.data.length
-  const pieces = ((option.value as any).visualMap?.pieces || []) as Array<{ min: number; max: number }>
   return props.data.filter((record) => {
     const value = record[props.metric] as number
-    return pieces.some((piece, index) => {
+    return rangeDefinitions.value.some((range, index) => {
       if (props.rangeSelection?.[String(index)] === false) return false
-      const includeMax = index === pieces.length - 1
-      return value >= piece.min && (includeMax ? value <= piece.max : value < piece.max)
+      return isValueInRange(value, range)
     })
   }).length
 })
@@ -237,19 +240,19 @@ function handleClick(params: any) {
 }
 
 function handleRangeSelection(params: any) {
-  const pieces = ((option.value as any).visualMap?.pieces || []) as Array<{ min: number; max: number }>
-  const selected = Object.fromEntries(pieces.map((_, index) => [
+  const selected = Object.fromEntries(rangeDefinitions.value.map((_, index) => [
     String(index),
     params?.selected?.[String(index)] !== false,
   ]))
-  const activeRanges = pieces.flatMap((piece, index) => {
+  const activeRanges = rangeDefinitions.value.flatMap((range, index) => {
     if (!selected[String(index)]) return []
-    return [{ min: piece.min, max: piece.max, includeMax: index === pieces.length - 1 }]
+    const { min, max, includeMin, includeMax } = range
+    return [{ min, max, includeMin, includeMax }]
   })
 
   emit('update:rangeFilter', {
     selected,
-    ranges: activeRanges.length === pieces.length ? null : activeRanges,
+    ranges: activeRanges.length === rangeDefinitions.value.length ? null : activeRanges,
   })
 }
 </script>

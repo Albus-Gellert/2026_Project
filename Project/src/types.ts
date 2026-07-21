@@ -46,6 +46,7 @@ export interface MetricDefinition {
 export interface MetricRange {
   min: number
   max: number
+  includeMin: boolean
   includeMax: boolean
 }
 

@@ -8,7 +8,7 @@ defineProps<{
 <template>
   <header class="app-header">
     <div class="header-inner">
-      <div class="identity">
+      <RouterLink class="identity" to="/" aria-label="Back to explorer introduction">
         <div class="brand-mark" aria-hidden="true">
           <span></span><span></span><span></span>
         </div>
@@ -16,16 +16,12 @@ defineProps<{
           <div class="eyebrow">FAO AQUASTAT · VISUAL ANALYTICS STUDY</div>
           <h1>Global Water Stress Explorer</h1>
         </div>
-      </div>
+      </RouterLink>
 
       <div class="header-context">
         <div class="context-copy">
           <span>Active lens</span>
           <strong>{{ selectedCountry }} · {{ selectedYear }}</strong>
-        </div>
-        <div class="prototype-badge">
-          <span class="status-dot"></span>
-          Prototype / Mock Data
         </div>
       </div>
     </div>
@@ -35,13 +31,14 @@ defineProps<{
 <style scoped>
 .app-header {
   color: #f7fbfa;
-  background: #102e39;
+  background: var(--navy);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(23, 57, 66, .1);
 }
 
 .header-inner {
-  width: min(1660px, calc(100% - 48px));
-  min-height: 86px;
+  width: min(1480px, calc(100% - 48px));
+  min-height: 96px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -55,13 +52,13 @@ defineProps<{
   align-items: center;
 }
 
-.identity { gap: 16px; }
+.identity { gap: 18px; color: inherit; text-decoration: none; }
 .header-context { gap: 28px; }
 
 .brand-mark {
-  width: 42px;
-  height: 42px;
-  border: 1px solid rgba(172, 224, 214, 0.45);
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(154, 199, 188, .46);
   border-radius: 50%;
   display: flex;
   align-items: flex-end;
@@ -74,7 +71,7 @@ defineProps<{
 .brand-mark span {
   width: 5px;
   border-radius: 4px 4px 1px 1px;
-  background: #88cfc2;
+  background: #9ac7bc;
 }
 
 .brand-mark span:nth-child(1) { height: 11px; opacity: .62; }
@@ -83,17 +80,18 @@ defineProps<{
 
 .eyebrow {
   margin-bottom: 5px;
-  color: #88cfc2;
-  font-size: 10px;
+  color: #9ac7bc;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: .16em;
+  letter-spacing: .14em;
 }
 
 h1 {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', 'Noto Serif', Georgia, serif;
   font-size: clamp(24px, 2vw, 31px);
   font-weight: 500;
+  line-height: 1.18;
   letter-spacing: -.02em;
 }
 
@@ -106,45 +104,26 @@ h1 {
 }
 
 .context-copy span {
-  color: #9fb1b7;
-  font-size: 10px;
+  color: #b3c1c3;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: .12em;
 }
 
 .context-copy strong {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.prototype-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  border: 1px solid rgba(244, 196, 103, .42);
-  border-radius: 5px;
-  color: #f7d99f;
-  background: rgba(244, 196, 103, .08);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: .04em;
-  white-space: nowrap;
-}
-
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #efb953;
-  box-shadow: 0 0 0 3px rgba(239, 185, 83, .12);
+  font-size: 14px;
+  font-weight: 650;
 }
 
 @media (max-width: 760px) {
-  .header-inner { width: min(100% - 30px, 1660px); min-height: 104px; }
-  .context-copy { display: none; }
+  .header-inner {
+    width: min(100% - 30px, 1480px);
+    min-height: 108px;
+    padding: 12px 0;
+  }
+  .header-context { display: none; }
   .brand-mark { display: none; }
-  .prototype-badge { font-size: 9px; padding: 8px; }
-  .header-context { gap: 8px; }
+  h1 { font-size: 22px; }
+  .eyebrow { font-size: 9px; }
 }
 </style>

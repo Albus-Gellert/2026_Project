@@ -48,7 +48,7 @@ const observations = computed(() => {
       index: 'B',
       label: 'Country Comparison',
       title: `Rank ${regionalRank} of ${regionData.length} in its region`,
-      body: `The mock regional average for ${selected.region} is ${formatMetric(regionAverage, props.metric)}. Use the ranking and scatter views to inspect what drives the gap.`,
+      body: `The regional average for ${selected.region} is ${formatMetric(regionAverage, props.metric)}. Use the ranking and scatter views to inspect what drives the gap.`,
       tone: 'gold',
     },
     {
@@ -56,8 +56,8 @@ const observations = computed(() => {
       label: 'Possible Outlier',
       title: Math.abs(zScore) >= 1.4 ? `${selected.country} is a candidate outlier` : `${mostExtreme?.country ?? selected.country} is the stronger outlier candidate`,
       body: Math.abs(zScore) >= 1.4
-        ? `Its standardized distance from the current mean is ${formatPlain(Math.abs(zScore), 1)}σ. This is a demo flag for later investigation, not a conclusion.`
-        : `${selected.country} is ${formatPlain(Math.abs(zScore), 1)}σ from the current mean. The prototype would direct follow-up analysis toward ${mostExtreme?.country ?? selected.country}.`,
+        ? `Its standardized distance from the current mean is ${formatPlain(Math.abs(zScore), 1)}σ, making it a priority for further investigation.`
+        : `${selected.country} is ${formatPlain(Math.abs(zScore), 1)}σ from the current mean. The stronger follow-up candidate is ${mostExtreme?.country ?? selected.country}.`,
       tone: 'coral',
     },
   ]
@@ -71,9 +71,9 @@ const observations = computed(() => {
         <div class="section-kicker inverse"><span>06</span> FINDINGS WORKBENCH</div>
         <h2>From coordinated views to questions worth testing</h2>
       </div>
-      <div class="demo-disclaimer">
-        <strong>Demo observations only</strong>
-        <span>Generated from synthetic values · not final insight</span>
+      <div class="findings-note">
+        <strong>Current analytical view</strong>
+        <span>Updates with the selected scope and metric</span>
       </div>
     </header>
 
@@ -90,46 +90,46 @@ const observations = computed(() => {
 
     <footer>
       <span>NEXT RESEARCH STEP</span>
-      Replace these generated prompts with evidence-backed findings after the AQUASTAT variables and research question are finalized.
+      Use these observations to compare the selected country with regional and cross-country patterns.
     </footer>
   </section>
 </template>
 
 <style scoped>
 .findings-panel {
-  padding: 22px 24px 18px;
+  padding: 26px 28px 22px;
   border-radius: var(--radius);
   color: #edf6f4;
-  background: #13333d;
+  background: var(--navy);
   box-shadow: var(--shadow-sm);
 }
 
 .findings-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 30px; padding-bottom: 18px; border-bottom: 1px solid rgba(255, 255, 255, .11); }
-.findings-header h2 { margin: 7px 0 0; font-family: Georgia, serif; font-size: 22px; font-weight: 500; }
-.section-kicker.inverse { color: #8fc9c0; }
-.section-kicker.inverse span { color: #12333d; background: #8fc9c0; }
+.findings-header h2 { margin: 8px 0 0; font-size: 23px; font-weight: 650; line-height: 1.3; letter-spacing: -.025em; }
+.section-kicker.inverse { color: #9ac7bc; }
+.section-kicker.inverse span { color: var(--navy); background: #9ac7bc; }
 
-.demo-disclaimer { padding: 9px 11px; border: 1px solid rgba(236, 190, 100, .3); border-radius: 4px; background: rgba(236, 190, 100, .07); text-align: right; }
-.demo-disclaimer strong, .demo-disclaimer span { display: block; }
-.demo-disclaimer strong { color: #f0c878; font-size: 10px; }
-.demo-disclaimer span { margin-top: 3px; color: #aebdc0; font-size: 8px; }
+.findings-note { padding: 11px 13px; border: 1px solid rgba(154, 199, 188, .28); border-radius: 7px; background: rgba(154, 199, 188, .07); text-align: right; }
+.findings-note strong, .findings-note span { display: block; }
+.findings-note strong { color: #acd1c8; font-size: 12px; }
+.findings-note span { margin-top: 4px; color: #bdcacc; font-size: 10px; }
 
-.observation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; padding: 18px 0; }
-.observation-card { min-height: 122px; display: grid; grid-template-columns: auto 1fr; gap: 13px; padding: 16px; border: 1px solid rgba(255, 255, 255, .1); border-top-width: 3px; background: rgba(255, 255, 255, .035); }
-.observation-card.teal { border-top-color: #6db6aa; }
-.observation-card.gold { border-top-color: #d8ac52; }
-.observation-card.coral { border-top-color: #cf735c; }
-.observation-index { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; color: #11313a; background: #dfeae7; font-family: Georgia, serif; font-size: 12px; }
-.observation-card span { color: #91aaaD; font-size: 8px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
-.observation-card h3 { margin: 7px 0 6px; color: #f2f7f5; font-size: 13px; line-height: 1.3; }
-.observation-card p { margin: 0; color: #b7c5c7; font-size: 10px; line-height: 1.55; }
+.observation-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding: 21px 0; }
+.observation-card { min-height: 148px; display: grid; grid-template-columns: auto 1fr; gap: 14px; padding: 18px; border: 1px solid rgba(255, 255, 255, .11); border-top-width: 3px; border-radius: 7px; background: rgba(255, 255, 255, .04); }
+.observation-card.teal { border-top-color: #6d9f95; }
+.observation-card.gold { border-top-color: #c3a15b; }
+.observation-card.coral { border-top-color: #c7735e; }
+.observation-index { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; color: #11313a; background: #dfeae7; font-size: 13px; font-weight: 700; }
+.observation-card span { color: #a2babd; font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.observation-card h3 { margin: 8px 0 7px; color: #f2f7f5; font-size: 16px; line-height: 1.4; }
+.observation-card p { margin: 0; color: #c4d0d2; font-size: 12px; line-height: 1.65; }
 
-footer { padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .11); color: #9fb2b5; font-size: 9px; }
-footer span { margin-right: 10px; color: #efc36c; font-weight: 800; letter-spacing: .1em; }
+footer { padding-top: 14px; border-top: 1px solid rgba(255, 255, 255, .11); color: #afc0c2; font-size: 11px; line-height: 1.55; }
+footer span { margin-right: 10px; color: #d4b66f; font-weight: 800; letter-spacing: .1em; }
 
 @media (max-width: 900px) {
   .findings-header { display: grid; }
-  .demo-disclaimer { text-align: left; }
+  .findings-note { text-align: left; }
   .observation-grid { grid-template-columns: 1fr; }
 }
 </style>

@@ -55,14 +55,14 @@ const summary = computed(() => {
   grid-template-columns: 1.25fr repeat(4, 1fr);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: #fbfcfa;
+  background: #fdfcf8;
   overflow: hidden;
 }
 
 .summary-context,
 .summary-item {
-  min-height: 72px;
-  padding: 15px 20px;
+  min-height: 84px;
+  padding: 17px 22px;
   box-sizing: border-box;
 }
 
@@ -70,56 +70,58 @@ const summary = computed(() => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background: #eaf3f0;
+  background: #e8f0ec;
 }
 
 .summary-context span,
 .summary-item > span {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 800;
   letter-spacing: .1em;
   text-transform: uppercase;
 }
 
-.summary-context strong { margin: 4px 0 2px; color: #1b4d4a; font-size: 13px; }
-.summary-context small { color: #64817f; font-size: 10px; }
+.summary-context strong { margin: 4px 0 2px; color: var(--teal-dark); font-size: 15px; }
+.summary-context small { color: #637b77; font-size: 11px; }
 
 .summary-item {
   position: relative;
   display: grid;
   align-content: center;
-  gap: 6px;
+  gap: 7px;
   border-left: 1px solid var(--line);
 }
 
 .summary-item strong {
   color: var(--ink);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: 21px;
-  font-weight: 500;
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-item strong small {
   color: var(--muted);
-  font-family: Inter, Arial, sans-serif;
-  font-size: 10px;
+  font-family: inherit;
+  font-size: 11px;
   font-weight: 600;
 }
 
 .swatch {
   position: absolute;
-  right: 18px;
-  bottom: 17px;
-  width: 18px;
+  right: 20px;
+  bottom: 19px;
+  width: 20px;
   height: 3px;
   border-radius: 2px;
 }
 
-.stress { background: #cf6d55; }
-.withdrawal { background: #357f83; }
-.signal { background: #daa449; }
-.population { background: #826c98; }
+.stress { background: var(--coral); }
+.withdrawal { background: var(--teal); }
+.signal { background: var(--sand); }
+.population { background: var(--slate); }
 
 @media (max-width: 950px) {
   .summary-strip { grid-template-columns: repeat(2, 1fr); }
@@ -129,6 +131,6 @@ const summary = computed(() => {
 
 @media (max-width: 540px) {
   .summary-item { padding: 14px; }
-  .summary-item strong { font-size: 18px; }
+  .summary-item strong { font-size: 21px; }
 }
 </style>

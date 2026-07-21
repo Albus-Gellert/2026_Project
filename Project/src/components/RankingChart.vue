@@ -24,26 +24,27 @@ const rankedData = computed(() => {
 
 const option = computed(() => ({
   animationDurationUpdate: 380,
+  textStyle: { fontFamily: 'Segoe UI Variable, Segoe UI, sans-serif' },
   grid: { left: 8, right: 50, top: 8, bottom: 6, containLabel: true },
   tooltip: {
     trigger: 'item',
-    backgroundColor: '#112f39',
+    backgroundColor: '#173942',
     borderWidth: 0,
     padding: [9, 11],
-    textStyle: { color: '#f4f8f7', fontSize: 11 },
+    textStyle: { color: '#fffdf9', fontSize: 12 },
     formatter: (params: any) => {
       const record = rankedData.value[params.dataIndex]
       if (!record) return ''
       const globalRank = [...props.data]
         .sort((a, b) => (b[props.metric] as number) - (a[props.metric] as number))
         .findIndex((item) => item.country === record.country) + 1
-      return `<strong>${record.country}</strong><br/><span style="color:#9fb3b7">Rank ${globalRank} of ${props.data.length}</span><br/><span style="display:block;margin-top:6px">${formatMetric(record[props.metric] as number, props.metric)}</span>`
+      return `<strong>${record.country}</strong><br/><span style="color:#bdc9c8">Rank ${globalRank} of ${props.data.length}</span><br/><span style="display:block;margin-top:6px">${formatMetric(record[props.metric] as number, props.metric)}</span>`
     },
   },
   xAxis: {
     type: 'value',
     splitNumber: 4,
-    axisLabel: { color: '#7a898b', fontSize: 9 },
+    axisLabel: { color: '#5b6f72', fontSize: 12 },
     axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { lineStyle: { color: '#edf0ed' } },
@@ -57,8 +58,8 @@ const option = computed(() => ({
     axisLabel: {
       width: 112,
       overflow: 'truncate',
-      color: (value: string) => value === props.selectedCountry ? '#173d43' : '#55676a',
-      fontSize: 10,
+      color: (value: string) => value === props.selectedCountry ? '#20383b' : '#56686a',
+      fontSize: 12,
       fontWeight: (value: string) => value === props.selectedCountry ? 800 : 500,
     },
   },
@@ -69,7 +70,7 @@ const option = computed(() => ({
       name: record.country,
       value: record[props.metric],
       itemStyle: {
-        color: record.country === props.selectedCountry ? '#e8af47' : '#3d8f89',
+        color: record.country === props.selectedCountry ? '#c3a15b' : '#4e8b80',
         borderRadius: [0, 3, 3, 0],
       },
     })),
@@ -77,11 +78,11 @@ const option = computed(() => ({
       show: true,
       position: 'right',
       distance: 6,
-      color: '#53676a',
-      fontSize: 9,
+      color: '#536769',
+      fontSize: 11,
       formatter: (params: any) => formatMetric(params.value, props.metric, true).replace(` ${metricDefinitions[props.metric].unit}`, ''),
     },
-    emphasis: { itemStyle: { color: '#d89a2f' } },
+    emphasis: { itemStyle: { color: '#b9893c' } },
   }],
 }))
 
@@ -106,9 +107,9 @@ function handleClick(params: any) {
 </template>
 
 <style scoped>
-.ranking-panel { min-height: 420px; display: flex; flex-direction: column; }
-.ranking-chart { width: 100%; min-height: 300px; flex: 1; }
-.metric-unit { padding: 6px 8px; border-radius: 4px; color: #607477; background: #f1f4f2; font-size: 9px; }
-.click-note { padding-top: 9px; border-top: 1px solid var(--line); color: #7b898b; font-size: 9px; }
-.click-note span { display: inline-block; width: 12px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 2px; background: #e6ad44; }
+.ranking-panel { min-height: 460px; display: flex; flex-direction: column; }
+.ranking-chart { width: 100%; min-height: 330px; flex: 1; }
+.metric-unit { padding: 7px 9px; border-radius: 6px; color: #566d71; background: #f0f4f2; font-size: 12px; }
+.click-note { padding-top: 11px; border-top: 1px solid var(--line); color: #5d7073; font-size: 12px; }
+.click-note span { display: inline-block; width: 12px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 2px; background: var(--sand); }
 </style>

@@ -1,9 +1,9 @@
 export type Region =
-  | 'North Africa & Western Asia'
-  | 'Sub-Saharan Africa'
-  | 'Eastern & Southern Asia'
-  | 'Europe & Central Asia'
-  | 'Americas'
+  | 'Asia'
+  | 'Africa'
+  | 'Europe'
+  | 'North America'
+  | 'South America'
   | 'Oceania'
 
 export type MetricKey =
@@ -41,4 +41,15 @@ export interface MetricDefinition {
   decimals: number
   description: string
   palette: string[]
+}
+
+export interface MetricRange {
+  min: number
+  max: number
+  includeMax: boolean
+}
+
+export interface MapRangeFilter {
+  selected: Record<string, boolean>
+  ranges: MetricRange[] | null
 }

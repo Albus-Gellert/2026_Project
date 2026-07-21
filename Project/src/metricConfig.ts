@@ -7,8 +7,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Population',
     unit: 'million',
     decimals: 1,
-    description: 'Estimated population represented in the prototype',
-    palette: ['#dcebe7', '#83bcb2', '#2b7d76', '#123d45'],
+    description: 'Estimated population represented in the current dataset',
+    palette: ['#e4eeea', '#9abbb0', '#4e8b80', '#173942'],
   },
   waterStress: {
     key: 'waterStress',
@@ -16,8 +16,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Water stress',
     unit: '%',
     decimals: 0,
-    description: 'Mock pressure on available renewable freshwater resources',
-    palette: ['#d8eee8', '#7fc1b4', '#edbd64', '#dd7657', '#9f394b'],
+    description: 'Pressure on available renewable freshwater resources',
+    palette: ['#e4eeea', '#86aa94', '#c5c6a0', '#d6a26f', '#c87460'],
   },
   renewableWaterResources: {
     key: 'renewableWaterResources',
@@ -25,8 +25,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Renewable resources',
     unit: 'km³/yr',
     decimals: 1,
-    description: 'Mock annual renewable freshwater resources',
-    palette: ['#e1eef1', '#9bc9cc', '#4a9aa0', '#17616d', '#0c3845'],
+    description: 'Annual renewable freshwater resources',
+    palette: ['#e8efed', '#a5c1ba', '#6a9b91', '#3c7d75', '#173942'],
   },
   totalWaterWithdrawal: {
     key: 'totalWaterWithdrawal',
@@ -34,8 +34,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Total withdrawal',
     unit: 'km³/yr',
     decimals: 1,
-    description: 'Mock annual withdrawal across agriculture, industry and municipalities',
-    palette: ['#e6eced', '#9abfc3', '#4f8c95', '#255865', '#142f3c'],
+    description: 'Annual withdrawal across agriculture, industry and municipalities',
+    palette: ['#e7eceb', '#a5b9b7', '#718f8d', '#476f6d', '#20383b'],
   },
   agriculturalWithdrawal: {
     key: 'agriculturalWithdrawal',
@@ -43,8 +43,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Agriculture',
     unit: 'km³/yr',
     decimals: 1,
-    description: 'Mock water withdrawal attributed to agriculture',
-    palette: ['#f3ecd8', '#d6c47a', '#a8963e', '#6c672c'],
+    description: 'Water withdrawal attributed to agriculture',
+    palette: ['#f1ead9', '#d7c38e', '#c3a15b', '#7d693e'],
   },
   industrialWithdrawal: {
     key: 'industrialWithdrawal',
@@ -52,8 +52,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Industry',
     unit: 'km³/yr',
     decimals: 1,
-    description: 'Mock water withdrawal attributed to industry',
-    palette: ['#e2e8ee', '#9aaec1', '#586f89', '#293c51'],
+    description: 'Water withdrawal attributed to industry',
+    palette: ['#e5e9eb', '#a7b7bd', '#617b86', '#344f59'],
   },
   municipalWithdrawal: {
     key: 'municipalWithdrawal',
@@ -61,8 +61,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Municipal',
     unit: 'km³/yr',
     decimals: 1,
-    description: 'Mock water withdrawal attributed to municipal use',
-    palette: ['#e6ebee', '#a8bbc2', '#657f8a', '#314d5b'],
+    description: 'Water withdrawal attributed to municipal use',
+    palette: ['#e4eeea', '#a5c1ba', '#6e9f95', '#3c7d75'],
   },
   waterUseEfficiency: {
     key: 'waterUseEfficiency',
@@ -70,8 +70,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Use efficiency',
     unit: 'index',
     decimals: 1,
-    description: 'A synthetic efficiency index used only for prototype comparison',
-    palette: ['#e9e4f0', '#b9a7ca', '#806a9f', '#4a355f'],
+    description: 'Water-use efficiency index for cross-country comparison',
+    palette: ['#e8ebeb', '#b4c0c2', '#7c9198', '#526970'],
   },
   irrigatedArea: {
     key: 'irrigatedArea',
@@ -79,8 +79,8 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     shortLabel: 'Irrigated area',
     unit: 'Mha',
     decimals: 2,
-    description: 'Mock irrigated land area in million hectares',
-    palette: ['#e9eedf', '#b7c98d', '#7f9f54', '#496b31'],
+    description: 'Irrigated land area in million hectares',
+    palette: ['#e9eee5', '#b8c5a8', '#8fa991', '#596f5d'],
   },
 }
 
@@ -102,12 +102,12 @@ export const scatterMetricKeys: MetricKey[] = [
 ]
 
 export const regionColors: Record<string, string> = {
-  'North Africa & Western Asia': '#d8845f',
-  'Sub-Saharan Africa': '#b69a4c',
-  'Eastern & Southern Asia': '#4a908a',
-  'Europe & Central Asia': '#6483a6',
-  Americas: '#9b6f91',
-  Oceania: '#6f9d72',
+  'Asia': '#c97a62',
+  'Africa': '#b69a5c',
+  'Europe': '#7d718c',
+  'North America': '#4c8c82',
+  'South America': '#638095',
+  'Oceania': '#7c9a78',
 }
 
 export function formatMetric(value: number, key: MetricKey, compact = false): string {

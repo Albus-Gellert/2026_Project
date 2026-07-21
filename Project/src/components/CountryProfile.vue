@@ -6,12 +6,13 @@ import { formatMetric, formatPlain, getWaterStressCategory, metricDefinitions } 
 
 const props = defineProps<{
   data: CountryYearRecord[]
+  benchmarkData: CountryYearRecord[]
   selectedCountry: string
+  selectedRegion: string
   activeMetric: MetricKey
 }>()
 
 const record = computed(() => props.data.find((item) => item.country === props.selectedCountry))
-const regionalData = computed(() => record.value ? props.data.filter((item) => item.region === record.value?.region) : [])
 
 const sectorChartStyle = {
   center: ['32%', '52%'],
@@ -24,7 +25,7 @@ const sectorChartStyle = {
 }
 
 function average(key: MetricKey): number {
-  const values = regionalData.value
+  const values = props.benchmarkData
     .map((item) => item[key] as number)
     .filter(Number.isFinite)
   if (!values.length) return 0
@@ -87,7 +88,7 @@ const comparisons = computed(() => {
     { label: 'Resources / capita', value: selected.renewableWaterResources / selected.population, benchmark: averagePerCapita(), unit: 'thousand m³' },
   ].map((item) => ({
     ...item,
-    // The regional mean is the fixed midpoint; the country bar is expressed relative to it.
+    // The current filter-scope mean is the fixed midpoint; the country bar is relative to it.
     countryPosition: item.benchmark > 0
       ? Math.min(Math.max(item.value / item.benchmark * 50, 0), 100)
       : item.value > 0 ? 100 : 50,
@@ -95,7 +96,7 @@ const comparisons = computed(() => {
 })
 
 function averagePerCapita(): number {
-  const values = regionalData.value
+  const values = props.benchmarkData
     .filter((item) => item.population > 0)
     .map((item) => item.renewableWaterResources / item.population)
     .filter(Number.isFinite)
@@ -176,10 +177,10 @@ function averagePerCapita(): number {
       <div class="profile-section compare-section">
         <div class="mini-heading benchmark-heading">
           <div>
-            <strong>Regional benchmark</strong>
-            <small>{{ record.region }} · {{ record.year }} · {{ regionalData.length }}-country scope</small>
+            <strong>Scope benchmark</strong>
+            <small>{{ selectedRegion }} · {{ record.year }} · {{ benchmarkData.length }} countries in view</small>
           </div>
-          <span><i class="country-key"></i> country <i class="average-key"></i> region avg</span>
+          <span><i class="country-key"></i> country <i class="average-key"></i> scope avg</span>
         </div>
         <div v-for="item in comparisons" :key="item.label" class="comparison-row">
           <div class="comparison-label">

@@ -61,7 +61,7 @@ pnpm run build
 - `.sector-chart-wrap`：图表整体高度。
 - `.sector-total`：中心数值位置和字号。它的 `left`、`top` 应与 `sectorChartStyle.center` 保持一致。
 - `.mini-heading`：03 下半部分两个分区标题与右侧说明文字。
-- `.comparison-label`、`.benchmark-track`：区域基准的标签、数值、单位字号和基准线粗细；区域平均线固定在轨道中点，国家条长度表示该国相对区域平均值的位置。
+- `.comparison-label`、`.benchmark-track`：当前筛选范围基准的标签、数值、单位字号和基准线粗细；范围平均线固定在轨道中点，国家条长度表示该国相对当前范围平均值的位置。`All regions` 使用全部可见国家，选择具体地区时使用该地区的可见国家。
 
 ### 页面文字
 

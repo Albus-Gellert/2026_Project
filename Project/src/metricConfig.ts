@@ -34,6 +34,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 1,
     description: 'Estimated population represented in the current dataset',
     palette: ['#e4eeea', '#9abbb0', '#4e8b80', '#173942'],
+    rankTitle: 'Top countries by population',
   },
   waterStress: {
     key: 'waterStress',
@@ -43,6 +44,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 0,
     description: 'Pressure on available renewable freshwater resources',
     palette: ['#e4eeea', '#86aa94', '#c5c6a0', '#d6a26f', '#c87460'],
+    rankTitle: 'Top countries by water stress',
   },
   renewableWaterResources: {
     key: 'renewableWaterResources',
@@ -52,6 +54,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 1,
     description: 'Annual renewable freshwater resources',
     palette: ['#e8efed', '#a5c1ba', '#6a9b91', '#3c7d75', '#173942'],
+    rankTitle: 'Top countries by renewable resources',
   },
   totalWaterWithdrawal: {
     key: 'totalWaterWithdrawal',
@@ -61,6 +64,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 1,
     description: 'Annual withdrawal across agriculture, industry and municipalities',
     palette: ['#e7eceb', '#a5b9b7', '#718f8d', '#476f6d', '#20383b'],
+    rankTitle: 'Top countries by total withdrawal',
   },
   agriculturalWithdrawal: {
     key: 'agriculturalWithdrawal',
@@ -70,6 +74,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 1,
     description: 'Water withdrawal attributed to agriculture',
     palette: ['#f1ead9', '#d7c38e', '#c3a15b', '#7d693e'],
+    rankTitle: 'Top countries by agricultural withdrawal',
   },
   industrialWithdrawal: {
     key: 'industrialWithdrawal',
@@ -79,6 +84,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 1,
     description: 'Water withdrawal attributed to industry',
     palette: ['#e5e9eb', '#a7b7bd', '#617b86', '#344f59'],
+    rankTitle: 'Top countries by industrial withdrawal',
   },
   municipalWithdrawal: {
     key: 'municipalWithdrawal',
@@ -88,6 +94,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 1,
     description: 'Water withdrawal attributed to municipal use',
     palette: ['#e4eeea', '#a5c1ba', '#6e9f95', '#3c7d75'],
+    rankTitle: 'Top countries by municipal withdrawal',
   },
   waterUseEfficiency: {
     key: 'waterUseEfficiency',
@@ -97,6 +104,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 1,
     description: 'Water-use efficiency index for cross-country comparison',
     palette: ['#e8ebeb', '#b4c0c2', '#7c9198', '#526970'],
+    rankTitle: 'Top countries by water-use efficiency',
   },
   irrigatedArea: {
     key: 'irrigatedArea',
@@ -106,6 +114,7 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     decimals: 2,
     description: 'Irrigated land area in million hectares',
     palette: ['#e9eee5', '#b8c5a8', '#8fa991', '#596f5d'],
+    rankTitle: 'Top countries by irrigated area',
   },
 }
 

@@ -123,9 +123,7 @@ function resetDashboard() {
         />
         <CountryProfile
           :data="filteredData"
-          :benchmark-data="analysisData"
           :selected-country="selectedCountry"
-          :selected-region="selectedRegion"
           :active-metric="selectedMetric"
         />
       </section>

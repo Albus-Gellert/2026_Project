@@ -41,6 +41,7 @@ export interface MetricDefinition {
   decimals: number
   description: string
   palette: string[]
+  rankTitle: string
 }
 
 export interface MetricRange {

@@ -6,13 +6,14 @@ import { formatMetric, formatPlain, getWaterStressCategory, metricDefinitions } 
 
 const props = defineProps<{
   data: CountryYearRecord[]
-  benchmarkData: CountryYearRecord[]
   selectedCountry: string
-  selectedRegion: string
   activeMetric: MetricKey
 }>()
 
 const record = computed(() => props.data.find((item) => item.country === props.selectedCountry))
+const regionalData = computed(() => record.value
+  ? props.data.filter((item) => item.region === record.value?.region)
+  : [])
 
 const sectorChartStyle = {
   center: ['32%', '52%'],
@@ -25,7 +26,7 @@ const sectorChartStyle = {
 }
 
 function average(key: MetricKey): number {
-  const values = props.benchmarkData
+  const values = regionalData.value
     .map((item) => item[key] as number)
     .filter(Number.isFinite)
   if (!values.length) return 0
@@ -39,7 +40,34 @@ const rank = computed(() => {
     .findIndex((item) => item.country === record.value?.country) + 1
 })
 
-const stressCategory = computed(() => getWaterStressCategory(record.value?.waterStress ?? 0))
+const metricDisplayInfo = computed(() => {
+  if (!record.value) return null
+
+  const definition = metricDefinitions[props.activeMetric]
+  const value = record.value[props.activeMetric] as number
+  const accentIndex = Math.max(definition.palette.length - 2, 0)
+  let color = definition.palette[accentIndex]
+  let surface = definition.palette[0]
+  let foreground = definition.palette[definition.palette.length - 1]
+  let categoryName: string | null = null
+
+  if (props.activeMetric === 'waterStress') {
+    const category = getWaterStressCategory(value)
+    color = category.color
+    surface = category.surface
+    foreground = category.foreground
+    categoryName = category.name
+  }
+
+  return {
+    label: definition.label,
+    value: formatMetric(value, props.activeMetric),
+    categoryName,
+    color,
+    surface,
+    foreground,
+  }
+})
 
 const sectorOption = computed(() => {
   if (!record.value) return {}
@@ -88,7 +116,7 @@ const comparisons = computed(() => {
     { label: 'Resources / capita', value: selected.renewableWaterResources / selected.population, benchmark: averagePerCapita(), unit: 'thousand m³' },
   ].map((item) => ({
     ...item,
-    // The current filter-scope mean is the fixed midpoint; the country bar is relative to it.
+    // The selected country's continental mean is the fixed midpoint.
     countryPosition: item.benchmark > 0
       ? Math.min(Math.max(item.value / item.benchmark * 50, 0), 100)
       : item.value > 0 ? 100 : 50,
@@ -96,7 +124,7 @@ const comparisons = computed(() => {
 })
 
 function averagePerCapita(): number {
-  const values = props.benchmarkData
+  const values = regionalData.value
     .filter((item) => item.population > 0)
     .map((item) => item.renewableWaterResources / item.population)
     .filter(Number.isFinite)
@@ -122,19 +150,20 @@ function averagePerCapita(): number {
       </header>
 
       <div
+        v-if="metricDisplayInfo"
         class="signal-banner"
         :style="{
-          '--stress-color': stressCategory.color,
-          '--stress-surface': stressCategory.surface,
-          '--stress-foreground': stressCategory.foreground,
+          '--lens-color': metricDisplayInfo.color,
+          '--lens-surface': metricDisplayInfo.surface,
+          '--lens-foreground': metricDisplayInfo.foreground,
         }"
       >
         <div class="signal-mark"></div>
         <div>
-          <span>Water stress lens</span>
-          <strong>{{ stressCategory.name }}</strong>
+          <span>{{ metricDisplayInfo.label }} lens</span>
+          <strong v-if="metricDisplayInfo.categoryName">{{ metricDisplayInfo.categoryName }}</strong>
         </div>
-        <b>{{ formatMetric(record.waterStress, 'waterStress') }}</b>
+        <b>{{ metricDisplayInfo.value }}</b>
       </div>
 
       <div class="indicator-grid">
@@ -177,10 +206,10 @@ function averagePerCapita(): number {
       <div class="profile-section compare-section">
         <div class="mini-heading benchmark-heading">
           <div>
-            <strong>Scope benchmark</strong>
-            <small>{{ selectedRegion }} · {{ record.year }} · {{ benchmarkData.length }} countries in view</small>
+            <strong>Continental benchmark</strong>
+            <small>{{ record.region }} · {{ record.year }} · {{ regionalData.length }} countries</small>
           </div>
-          <span><i class="country-key"></i> country <i class="average-key"></i> scope avg</span>
+          <span><i class="country-key"></i> country <i class="average-key"></i> continent avg</span>
         </div>
         <div v-for="item in comparisons" :key="item.label" class="comparison-row">
           <div class="comparison-label">
@@ -210,12 +239,12 @@ function averagePerCapita(): number {
 .rank-chip span, .rank-chip small { display: block; color: #607a78; font-size: 11px; }
 .rank-chip strong { display: block; margin: 2px 0; color: var(--teal-dark); font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.signal-banner { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; margin: 16px 0; padding: 12px 14px; border-left: 3px solid var(--stress-color); background: var(--stress-surface); }
-.signal-mark { width: 9px; height: 9px; border-radius: 50%; background: var(--stress-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--stress-color) 18%, transparent); }
-.signal-banner div:nth-child(2) { display: grid; gap: 2px; }
-.signal-banner span { color: var(--stress-foreground); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
-.signal-banner strong { color: var(--stress-foreground); font-size: 13px; }
-.signal-banner b { color: var(--stress-foreground); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.signal-banner { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; margin: 16px 0; padding: 12px 14px; border-left: 3px solid var(--lens-color); background: var(--lens-surface); }
+.signal-mark { width: 9px; height: 9px; border-radius: 50%; background: var(--lens-color); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lens-color) 18%, transparent); }
+.signal-banner div:nth-child(2) { display: grid; min-width: 0; gap: 2px; }
+.signal-banner span { color: var(--lens-foreground); font-size: 11px; font-weight: 800; line-height: 1.3; text-transform: uppercase; letter-spacing: .08em; overflow-wrap: anywhere; }
+.signal-banner strong { color: var(--lens-foreground); font-size: 13px; }
+.signal-banner b { color: var(--lens-foreground); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 
 .indicator-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
 .indicator { padding: 13px 14px; display: grid; gap: 3px; }

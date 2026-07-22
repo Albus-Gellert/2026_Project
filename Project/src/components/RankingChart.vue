@@ -96,8 +96,8 @@ function handleClick(params: any) {
     <header class="panel-header compact-header">
       <div>
         <div class="section-kicker"><span>04</span> COUNTRY RANKING</div>
-        <h2>Where pressure concentrates</h2>
-        <p>Top countries by {{ metricDefinitions[metric].shortLabel.toLowerCase() }} in the current scope.</p>
+        <h2>{{ metricDefinitions[metric].rankTitle }}</h2>
+        <p>{{ metricDefinitions[metric].description }}</p>
       </div>
       <div class="metric-unit">{{ metricDefinitions[metric].unit }}</div>
     </header>
@@ -109,7 +109,15 @@ function handleClick(params: any) {
 <style scoped>
 .ranking-panel { min-height: 460px; display: flex; flex-direction: column; }
 .ranking-chart { width: 100%; min-height: 330px; flex: 1; }
-.metric-unit { padding: 7px 9px; border-radius: 6px; color: #566d71; background: #f0f4f2; font-size: 12px; }
+.compact-header > div:first-child { flex: 1; min-width: 0; }
+.compact-header h2 { max-width: 34ch; line-height: 1.18; text-wrap: balance; overflow-wrap: anywhere; }
+.metric-unit { flex: none; max-width: 86px; padding: 7px 9px; border-radius: 6px; color: #566d71; background: #f0f4f2; font-size: 12px; text-align: center; overflow-wrap: anywhere; }
 .click-note { padding-top: 11px; border-top: 1px solid var(--line); color: #5d7073; font-size: 12px; }
 .click-note span { display: inline-block; width: 12px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 2px; background: var(--sand); }
+
+@media (max-width: 540px) {
+  .compact-header { gap: 10px; }
+  .compact-header h2 { font-size: 18px; }
+  .metric-unit { max-width: 72px; padding: 6px 7px; font-size: 11px; }
+}
 </style>

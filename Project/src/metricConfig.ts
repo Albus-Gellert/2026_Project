@@ -1,11 +1,14 @@
-import type { MetricDefinition, MetricKey, MetricRange } from './types'
+import type { CountryYearRecord, MetricDefinition, MetricKey, MetricRange } from './types'
 
-export interface WaterStressCategory extends MetricRange {
-  name: string
+export interface MetricColorRange extends MetricRange {
   label: string
   color: string
   surface: string
   foreground: string
+}
+
+export interface WaterStressCategory extends MetricColorRange {
+  name: string
 }
 
 // SDG 6.4.2 water-stress categories. 100% is High; only values above 100% are Critical.
@@ -159,4 +162,70 @@ export function formatPlain(value: number, decimals = 1): string {
     maximumFractionDigits: decimals,
     minimumFractionDigits: decimals,
   }).format(value)
+}
+
+const QUANTILE_STYLES = [
+  { color: '#c87460', surface: '#f6eae6', foreground: '#884c40' },
+  { color: '#d6a26f', surface: '#f8efe5', foreground: '#8a5a31' },
+  { color: '#c5c6a0', surface: '#f4f2e6', foreground: '#6d6a3f' },
+  { color: '#86aa94', surface: '#f0f4ed', foreground: '#57725f' },
+  { color: '#4e877c', surface: '#edf4f2', foreground: '#355f57' },
+]
+
+export function isValueInMetricRange(value: number, range: MetricRange): boolean {
+  const meetsMinimum = range.includeMin ? value >= range.min : value > range.min
+  const meetsMaximum = range.includeMax ? value <= range.max : value < range.max
+  return meetsMinimum && meetsMaximum
+}
+
+export function getMetricColorRanges(metric: MetricKey, data: CountryYearRecord[]): MetricColorRange[] {
+  if (metric === 'waterStress') return waterStressCategories
+
+  const values = data
+    .map((record) => record[metric] as number)
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b)
+  if (!values.length) return []
+
+  const segmentCount = Math.min(5, new Set(values).size)
+  const percentile = (position: number) => values[Math.floor(position * (values.length - 1))]
+  const rawBreaks = [Math.min(values[0], 0)]
+  for (let index = 1; index < segmentCount; index += 1) {
+    rawBreaks.push(percentile(index / segmentCount))
+  }
+  rawBreaks.push(values[values.length - 1])
+
+  const breaks = rawBreaks.filter((value, index) => index === 0 || value > rawBreaks[index - 1])
+  if (breaks.length === 1) {
+    const style = QUANTILE_STYLES[QUANTILE_STYLES.length - 1]
+    return [{
+      min: breaks[0],
+      max: breaks[0],
+      includeMin: true,
+      includeMax: true,
+      ...style,
+      label: formatMetric(breaks[0], metric, true),
+    }]
+  }
+
+  return breaks.slice(0, -1).map((min, index) => {
+    const max = breaks[index + 1]
+    const includeMax = index === breaks.length - 2
+    const colorIndex = Math.round(index * (QUANTILE_STYLES.length - 1) / (breaks.length - 2))
+    return {
+      min,
+      max,
+      includeMin: true,
+      includeMax,
+      ...QUANTILE_STYLES[colorIndex],
+      label: `${formatMetric(min, metric, true)} – ${formatMetric(max, metric, true)}`,
+    }
+  })
+}
+
+export function getMetricColorRange(value: number, metric: MetricKey, data: CountryYearRecord[]): MetricColorRange {
+  const ranges = getMetricColorRanges(metric, data)
+  return ranges.find((range) => isValueInMetricRange(value, range))
+    ?? ranges[0]
+    ?? waterStressCategories[0]
 }

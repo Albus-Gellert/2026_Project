@@ -2,8 +2,9 @@
 import { computed, onMounted, ref } from 'vue'
 import VChart from 'vue-echarts'
 import * as echarts from 'echarts'
-import type { CountryYearRecord, MapRangeFilter, MetricKey, MetricRange } from '../types'
-import { formatMetric, metricDefinitions, waterStressCategories } from '../metricConfig'
+import type { CountryYearRecord, MapRangeFilter, MetricKey } from '../types'
+import type { MetricColorRange } from '../metricConfig'
+import { formatMetric, getMetricColorRanges, isValueInMetricRange, metricDefinitions } from '../metricConfig'
 
 const props = defineProps<{
   data: CountryYearRecord[]
@@ -46,20 +47,7 @@ const geoFeatures = computed(() => {
   return geo ? geo.features : []
 })
 
-interface RangeDefinition extends MetricRange {
-  label: string
-  color: string
-}
-
-const QUANTILE_COLORS = ['#c87460', '#d6a26f', '#c5c6a0', '#86aa94', '#4e877c']
-
-function isValueInRange(value: number, range: MetricRange): boolean {
-  const meetsMinimum = range.includeMin ? value >= range.min : value > range.min
-  const meetsMaximum = range.includeMax ? value <= range.max : value < range.max
-  return meetsMinimum && meetsMaximum
-}
-
-function toVisualPiece(range: RangeDefinition): Record<string, string | number> {
+function toVisualPiece(range: MetricColorRange): Record<string, string | number> {
   const piece: Record<string, string | number> = {
     label: range.label,
     color: range.color,
@@ -69,49 +57,7 @@ function toVisualPiece(range: RangeDefinition): Record<string, string | number> 
   return piece
 }
 
-const rangeDefinitions = computed<RangeDefinition[]>(() => {
-  if (props.metric === 'waterStress') return waterStressCategories
-
-  const values = props.data
-    .map((record) => record[props.metric] as number)
-    .filter(Number.isFinite)
-    .sort((a, b) => a - b)
-  if (!values.length) return []
-
-  const segmentCount = Math.min(5, new Set(values).size)
-  const percentile = (position: number) => values[Math.floor(position * (values.length - 1))]
-  const rawBreaks = [Math.min(values[0], 0)]
-  for (let index = 1; index < segmentCount; index += 1) {
-    rawBreaks.push(percentile(index / segmentCount))
-  }
-  rawBreaks.push(values[values.length - 1])
-
-  const breaks = rawBreaks.filter((value, index) => index === 0 || value > rawBreaks[index - 1])
-  if (breaks.length === 1) {
-    return [{
-      min: breaks[0],
-      max: breaks[0],
-      includeMin: true,
-      includeMax: true,
-      color: QUANTILE_COLORS[QUANTILE_COLORS.length - 1],
-      label: formatMetric(breaks[0], props.metric, true),
-    }]
-  }
-
-  return breaks.slice(0, -1).map((min, index) => {
-    const max = breaks[index + 1]
-    const includeMax = index === breaks.length - 2
-    const colorIndex = Math.round(index * (QUANTILE_COLORS.length - 1) / (breaks.length - 2))
-    return {
-      min,
-      max,
-      includeMin: true,
-      includeMax,
-      color: QUANTILE_COLORS[colorIndex],
-      label: `${formatMetric(min, props.metric, true)} – ${formatMetric(max, props.metric, true)}`,
-    }
-  })
-})
+const rangeDefinitions = computed(() => getMetricColorRanges(props.metric, props.data))
 
 function getFeatureISO3(feature: any): string | undefined {
   const props = feature.properties || {}
@@ -218,7 +164,7 @@ const activeCountryCount = computed(() => {
     const value = record[props.metric] as number
     return rangeDefinitions.value.some((range, index) => {
       if (props.rangeSelection?.[String(index)] === false) return false
-      return isValueInRange(value, range)
+      return isValueInMetricRange(value, range)
     })
   }).length
 })

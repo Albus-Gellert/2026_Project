@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import type { CountryYearRecord, MetricKey } from '../types'
-import { formatMetric, formatPlain, getWaterStressCategory, metricDefinitions } from '../metricConfig'
+import { formatMetric, formatPlain, getMetricColorRange, getWaterStressCategory, metricDefinitions } from '../metricConfig'
 
 const props = defineProps<{
   data: CountryYearRecord[]
@@ -45,17 +45,12 @@ const metricDisplayInfo = computed(() => {
 
   const definition = metricDefinitions[props.activeMetric]
   const value = record.value[props.activeMetric] as number
-  const accentIndex = Math.max(definition.palette.length - 2, 0)
-  let color = definition.palette[accentIndex]
-  let surface = definition.palette[0]
-  let foreground = definition.palette[definition.palette.length - 1]
+  const colorRange = getMetricColorRange(value, props.activeMetric, props.data)
+  const { color, surface, foreground } = colorRange
   let categoryName: string | null = null
 
   if (props.activeMetric === 'waterStress') {
     const category = getWaterStressCategory(value)
-    color = category.color
-    surface = category.surface
-    foreground = category.foreground
     categoryName = category.name
   }
 
@@ -152,6 +147,7 @@ function averagePerCapita(): number {
       <div
         v-if="metricDisplayInfo"
         class="signal-banner"
+        :class="{ 'signal-banner--stacked': activeMetric !== 'waterStress' }"
         :style="{
           '--lens-color': metricDisplayInfo.color,
           '--lens-surface': metricDisplayInfo.surface,
@@ -163,7 +159,7 @@ function averagePerCapita(): number {
           <span>{{ metricDisplayInfo.label }} lens</span>
           <strong v-if="metricDisplayInfo.categoryName">{{ metricDisplayInfo.categoryName }}</strong>
         </div>
-        <b>{{ metricDisplayInfo.value }}</b>
+        <b class="signal-value">{{ metricDisplayInfo.value }}</b>
       </div>
 
       <div class="indicator-grid">
@@ -245,6 +241,9 @@ function averagePerCapita(): number {
 .signal-banner span { color: var(--lens-foreground); font-size: 11px; font-weight: 800; line-height: 1.3; text-transform: uppercase; letter-spacing: .08em; overflow-wrap: anywhere; }
 .signal-banner strong { color: var(--lens-foreground); font-size: 13px; }
 .signal-banner b { color: var(--lens-foreground); font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.signal-banner--stacked { grid-template-columns: auto minmax(0, 1fr); align-items: start; row-gap: 7px; }
+.signal-banner--stacked .signal-mark { grid-row: 1 / span 2; margin-top: 3px; }
+.signal-banner--stacked .signal-value { grid-column: 2; justify-self: start; font-size: 18px; line-height: 1.15; }
 
 .indicator-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
 .indicator { padding: 13px 14px; display: grid; gap: 3px; }

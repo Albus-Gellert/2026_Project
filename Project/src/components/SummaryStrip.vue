@@ -10,13 +10,29 @@ const props = defineProps<{
 
 const criticalStressCategory = waterStressCategories[waterStressCategories.length - 1]
 
+function finiteValues(key: keyof CountryYearRecord): number[] {
+  return props.data
+    .map((record) => record[key])
+    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
+}
+
+function sumOrNull(values: number[]): number | null {
+  return values.length ? values.reduce((sum, value) => sum + value, 0) : null
+}
+
 const summary = computed(() => {
-  if (!props.data.length) return { averageStress: 0, withdrawal: 0, criticalStress: 0, population: 0 }
+  const stressValues = finiteValues('waterStress')
+  const withdrawalValues = finiteValues('totalWaterWithdrawal')
+  const populationValues = finiteValues('population')
   return {
-    averageStress: props.data.reduce((sum, record) => sum + record.waterStress, 0) / props.data.length,
-    withdrawal: props.data.reduce((sum, record) => sum + record.totalWaterWithdrawal, 0),
-    criticalStress: props.data.filter((record) => getWaterStressCategory(record.waterStress) === criticalStressCategory).length,
-    population: props.data.reduce((sum, record) => sum + record.population, 0),
+    averageStress: stressValues.length
+      ? stressValues.reduce((sum, value) => sum + value, 0) / stressValues.length
+      : null,
+    withdrawal: sumOrNull(withdrawalValues),
+    criticalStress: stressValues.length
+      ? stressValues.filter((value) => getWaterStressCategory(value) === criticalStressCategory).length
+      : null,
+    population: sumOrNull(populationValues),
   }
 })
 </script>
@@ -26,26 +42,26 @@ const summary = computed(() => {
     <div class="summary-context">
       <span>Current scope</span>
       <strong>{{ selectedRegion }}</strong>
-      <small>{{ data.length }} countries in view</small>
+      <small>{{ data.length }} countries in scope</small>
     </div>
     <div class="summary-item">
-      <span>Average stress</span>
-      <strong>{{ formatPlain(summary.averageStress, 0) }}<small>%</small></strong>
+      <span>Average country stress</span>
+      <strong>{{ formatPlain(summary.averageStress, 0) }}<small v-if="summary.averageStress !== null">%</small></strong>
       <i class="swatch stress"></i>
     </div>
     <div class="summary-item">
       <span>Total withdrawal</span>
-      <strong>{{ formatPlain(summary.withdrawal, 0) }}<small> km³/yr</small></strong>
+      <strong>{{ formatPlain(summary.withdrawal, 0) }}<small v-if="summary.withdrawal !== null"> km³/yr</small></strong>
       <i class="swatch withdrawal"></i>
     </div>
     <div class="summary-item">
       <span>Critical-stress signals</span>
-      <strong>{{ summary.criticalStress }}<small> countries</small></strong>
+      <strong>{{ summary.criticalStress ?? 'N/A' }}<small v-if="summary.criticalStress !== null"> countries</small></strong>
       <i class="swatch signal" :style="{ background: criticalStressCategory.color }"></i>
     </div>
     <div class="summary-item">
       <span>Population represented</span>
-      <strong>{{ formatPlain(summary.population / 1000, 1) }}<small> billion</small></strong>
+      <strong>{{ formatPlain(summary.population === null ? null : summary.population / 1000, 1) }}<small v-if="summary.population !== null"> billion</small></strong>
       <i class="swatch population"></i>
     </div>
   </section>

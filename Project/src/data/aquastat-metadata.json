@@ -1,0 +1,133 @@
+{
+  "source": "FAO AQUASTAT",
+  "sourcePortal": "https://data.apps.fao.org/aquastat/?lang=en",
+  "sourceQuery": "https://api.data.apps.fao.org/api/v2/bigquery?sql_url=https%3A%2F%2Fdata.apps.fao.org%2Fcatalog%2Fdataset%2F945666e6-7803-4621-b8ef-cfd885a84596%2Fresource%2F4a000a1b-24f0-4328-aab6-b9b525892090%2Fdownload%2Fquery_en.sql&area=World&type=all&variable=3008%2C4007%2C4010%2C4016%2C4019&year=2020%2C2021%2C2022%2C2023",
+  "countryCodeSource": "https://unstats.un.org/unsd/methodology/m49/overview/",
+  "release": "May 2026 annual release",
+  "generatedAt": "2026-07-22T14:05:57.567Z",
+  "years": [
+    2020,
+    2021,
+    2022,
+    2023
+  ],
+  "variableGroups": [
+    3008,
+    4007,
+    4010,
+    4016,
+    4019
+  ],
+  "fields": {
+    "population": {
+      "variable": "Total population",
+      "scale": 0.001,
+      "targetUnit": "million people"
+    },
+    "waterStress": {
+      "variable": "SDG 6.4.2. Water Stress",
+      "scale": 1,
+      "targetUnit": "%"
+    },
+    "renewableWaterResources": {
+      "variable": "Total renewable water resources",
+      "scale": 1,
+      "targetUnit": "km³/year"
+    },
+    "totalWaterWithdrawal": {
+      "variable": "Total water withdrawal",
+      "scale": 1,
+      "targetUnit": "km³/year"
+    },
+    "agriculturalWithdrawal": {
+      "variable": "Agricultural water withdrawal",
+      "scale": 1,
+      "targetUnit": "km³/year"
+    },
+    "industrialWithdrawal": {
+      "variable": "Industrial water withdrawal",
+      "scale": 1,
+      "targetUnit": "km³/year"
+    },
+    "municipalWithdrawal": {
+      "variable": "Municipal water withdrawal",
+      "scale": 1,
+      "targetUnit": "km³/year"
+    },
+    "waterUseEfficiency": {
+      "variable": "SDG 6.4.1. Water Use Efficiency",
+      "scale": 1,
+      "targetUnit": "US$/m³"
+    },
+    "irrigatedArea": {
+      "variable": "Area equipped for irrigation: total",
+      "scale": 0.001,
+      "targetUnit": "million hectares"
+    }
+  },
+  "qualityCodes": {
+    "A": "Official value",
+    "I": "Imputed value",
+    "E": "AQUASTAT estimate",
+    "X": "External value reported by FAOSTAT or another international agency",
+    "W": "WaPOR-derived value"
+  },
+  "rules": [
+    "The analysis directory contains 193 UN member states plus the Holy See and the State of Palestine.",
+    "AQUASTAT rows are joined to the country directory with the official UN M49 numeric code.",
+    "ISO3 is retained only as an internal map and record identifier.",
+    "Official AQUASTAT values are preserved; no synthetic year interpolation is applied.",
+    "Missing values are stored as null and must not be treated as zero.",
+    "Population is converted from thousand inhabitants to million people.",
+    "Irrigated area is converted from thousand hectares to million hectares."
+  ],
+  "recordCount": 780,
+  "countryCount": 195,
+  "coverageByYear": {
+    "2020": {
+      "population": 195,
+      "waterStress": 178,
+      "renewableWaterResources": 192,
+      "totalWaterWithdrawal": 179,
+      "agriculturalWithdrawal": 179,
+      "industrialWithdrawal": 179,
+      "municipalWithdrawal": 182,
+      "waterUseEfficiency": 168,
+      "irrigatedArea": 179
+    },
+    "2021": {
+      "population": 195,
+      "waterStress": 178,
+      "renewableWaterResources": 192,
+      "totalWaterWithdrawal": 179,
+      "agriculturalWithdrawal": 179,
+      "industrialWithdrawal": 179,
+      "municipalWithdrawal": 182,
+      "waterUseEfficiency": 168,
+      "irrigatedArea": 179
+    },
+    "2022": {
+      "population": 195,
+      "waterStress": 178,
+      "renewableWaterResources": 192,
+      "totalWaterWithdrawal": 179,
+      "agriculturalWithdrawal": 179,
+      "industrialWithdrawal": 179,
+      "municipalWithdrawal": 182,
+      "waterUseEfficiency": 169,
+      "irrigatedArea": 179
+    },
+    "2023": {
+      "population": 195,
+      "waterStress": 178,
+      "renewableWaterResources": 192,
+      "totalWaterWithdrawal": 179,
+      "agriculturalWithdrawal": 179,
+      "industrialWithdrawal": 179,
+      "municipalWithdrawal": 182,
+      "waterUseEfficiency": 169,
+      "irrigatedArea": 179
+    }
+  },
+  "countriesWithoutAnyValues": []
+}

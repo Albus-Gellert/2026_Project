@@ -12,27 +12,45 @@ const props = defineProps<{
 
 const record = computed(() => props.yearData.find((item) => item.country === props.selectedCountry))
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
 const observations = computed(() => {
-  if (!record.value || !props.scopedData.length) return []
+  if (!record.value) return []
   const selected = record.value
-  const value = selected[props.metric] as number
-  const scopedMean = props.scopedData.reduce((sum, item) => sum + (item[props.metric] as number), 0) / props.scopedData.length
+  const value = selected[props.metric]
+  if (!isFiniteNumber(value)) {
+    return [{
+      index: 'A',
+      label: 'Data availability',
+      title: `No ${metricDefinitions[props.metric].shortLabel.toLowerCase()} value for ${selected.country}`,
+      body: 'AQUASTAT does not provide a value for this country, year, and indicator. It is excluded from averages, ranks, and outlier calculations.',
+      tone: 'teal',
+    }]
+  }
+
+  const validScope = props.scopedData.filter((item) => isFiniteNumber(item[props.metric]))
+  if (!validScope.length) return []
+  const scopedMean = validScope.reduce((sum, item) => sum + (item[props.metric] as number), 0) / validScope.length
   const delta = scopedMean === 0 ? 0 : (value - scopedMean) / scopedMean * 100
   const direction = delta >= 0 ? 'above' : 'below'
 
-  const regionData = props.yearData.filter((item) => item.region === selected.region)
+  const regionData = props.yearData.filter((item) => (
+    item.region === selected.region && isFiniteNumber(item[props.metric])
+  ))
   const regionalRank = [...regionData]
-    .sort((a, b) => (b[props.metric] as number) - (a[props.metric] as number))
+    .sort((a, b) => (b[props.metric] ?? 0) - (a[props.metric] ?? 0))
     .findIndex((item) => item.country === selected.country) + 1
   const regionAverage = regionData.reduce((sum, item) => sum + (item[props.metric] as number), 0) / regionData.length
 
-  const variance = props.scopedData.reduce((sum, item) => {
+  const variance = validScope.reduce((sum, item) => {
     const difference = (item[props.metric] as number) - scopedMean
     return sum + difference * difference
-  }, 0) / props.scopedData.length
+  }, 0) / validScope.length
   const deviation = Math.sqrt(variance)
   const zScore = deviation === 0 ? 0 : (value - scopedMean) / deviation
-  const mostExtreme = [...props.scopedData].sort((a, b) => {
+  const mostExtreme = [...validScope].sort((a, b) => {
     return Math.abs((b[props.metric] as number) - scopedMean) - Math.abs((a[props.metric] as number) - scopedMean)
   })[0]
 
@@ -41,7 +59,7 @@ const observations = computed(() => {
       index: 'A',
       label: 'Current Observation',
       title: `${selected.country} sits ${direction} the current benchmark`,
-      body: `${metricDefinitions[props.metric].shortLabel} is ${formatMetric(value, props.metric)}—about ${formatPlain(Math.abs(delta), 0)}% ${direction} the ${props.scopedData.length}-country mean.`,
+      body: `${metricDefinitions[props.metric].shortLabel} is ${formatMetric(value, props.metric)}—about ${formatPlain(Math.abs(delta), 0)}% ${direction} the ${validScope.length}-country mean.`,
       tone: 'teal',
     },
     {

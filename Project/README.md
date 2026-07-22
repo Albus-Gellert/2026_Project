@@ -33,7 +33,7 @@ pnpm run build
 - `--coral`：高压力和风险提示。
 - `--slate`：工业用水及第四类信息。
 
-水压力的官方五档及配色位于 [`src/metricConfig.ts`](src/metricConfig.ts) 的 `waterStressCategories`，地图与国家卡片共用该配置；其他地图指标的分级色位于 [`src/components/WorldMap.vue`](src/components/WorldMap.vue) 的 `QUANTILE_COLORS`，区域散点色位于 [`src/metricConfig.ts`](src/metricConfig.ts) 的 `regionColors`。
+水压力的官方五档及配色位于 [`src/metricConfig.ts`](src/metricConfig.ts) 的 `waterStressCategories`，地图与国家卡片共用该配置；其他地图指标的五分位数样式位于同一文件的 `QUANTILE_STYLES`，区域散点色位于 `regionColors`。
 
 ### 世界地图
 
@@ -69,6 +69,20 @@ pnpm run build
 
 ## 数据说明
 
-当前仓库中的数据文件仍用于课程界面开发与交互验证；正式发布前应替换为经过核验的数据源。
+系统运行时使用 [`src/data/aquastat-data.json`](src/data/aquastat-data.json) 中的 FAO AQUASTAT 数据快照，通过 [`src/aquastatData.ts`](src/aquastatData.ts) 加载；`src/mockData.ts` 只保留为早期原型记录，不再被页面引用。
+
+- 分析范围固定为 195 个国家：193 个联合国会员国，加上 Holy See 和 Palestine。
+- AQUASTAT 的国家名称和指标数据使用联合国 M49 数字代码连接，ISO3 仅用于内部地图匹配，不在页面展示。
+- 缺失值保存为 `null`，地图显示为灰色，并从平均值、排名、分位数和异常值计算中排除。
+- `Water stress level` 使用 SDG 6.4.2 固定五档；其他地图指标使用当前范围内有效值的五分位数。
+- 数据质量代码、字段单位、覆盖数量、查询地址和生成时间记录在 [`src/data/aquastat-metadata.json`](src/data/aquastat-metadata.json)。
+
+重新从官方来源生成快照：
+
+```powershell
+npm run data:sync
+```
+
+同步脚本位于 [`scripts/sync-aquastat.mjs`](scripts/sync-aquastat.mjs)。应用部署后直接读取仓库内快照，不会在浏览器运行时请求 FAO 接口。
 
 完整的项目状态、组件说明、数据替换方法和新手指南见上级目录的 [`README.md`](../README.md) 与 [`ARCHITECTURE.md`](../ARCHITECTURE.md)。

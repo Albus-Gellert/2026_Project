@@ -5,6 +5,7 @@ import * as echarts from 'echarts'
 import type { CountryYearRecord, MapRangeFilter, MetricKey } from '../types'
 import type { MetricColorRange } from '../metricConfig'
 import { formatMetric, getMetricColorRanges, isValueInMetricRange, metricDefinitions } from '../metricConfig'
+import { mapNameToIso3 } from '../countryMappings'
 
 const props = defineProps<{
   data: CountryYearRecord[]
@@ -61,7 +62,12 @@ const rangeDefinitions = computed(() => getMetricColorRanges(props.metric, props
 
 function getFeatureISO3(feature: any): string | undefined {
   const props = feature.properties || {}
-  return props.iso_a3 || props.ISO_A3 || props.adm0_a3 || props.iso3 || props.ISO3
+  return props.iso_a3
+    || props.ISO_A3
+    || props.adm0_a3
+    || props.iso3
+    || props.ISO3
+    || mapNameToIso3[props.name]
 }
 
 const mapData = computed(() => {
@@ -79,13 +85,16 @@ const mapData = computed(() => {
       const featureName = feature.properties.name
       if (featureName) record = countryMap.get(featureName.toLowerCase())
     }
+    const value = record?.[props.metric]
+    const hasValue = Number.isFinite(value)
     return {
       name: feature.properties.name,
-      value: record ? record[props.metric] : undefined,
+      value: hasValue ? value : undefined,
       selected: record ? record.country === props.selectedCountry : false,
       rawCountry: record?.country || feature.properties.name,
       region: record?.region || '',
       record: record || null,
+      itemStyle: hasValue ? undefined : { color: '#d8ddda', opacity: 0.92 },
     }
   })
 })
@@ -101,8 +110,8 @@ const option = computed(() => {
     textStyle: { color: '#fffdf9', fontSize: 12 },
     formatter: (params: any) => {
     const data = params.data
-    if (!data || data.value === undefined) {
-      return `<strong style="font-size:14px">${params.name}</strong><br/><span style="color:#bdc9c8">No data available</span>`
+    if (!data || !Number.isFinite(data.value)) {
+      return `<strong style="font-size:14px">${data?.rawCountry || params.name}</strong><br/><span style="color:#bdc9c8">No data available</span>`
     }
     const label = metricDefinitions[props.metric].shortLabel || props.metric
     return [
@@ -148,8 +157,7 @@ const option = computed(() => {
         label: { show: true, color: '#20383b', fontSize: 12, fontWeight: 800 },
         itemStyle: { borderColor: '#20383b', borderWidth: 2 },
       },
-      // 数据中不需要再包含 itemStyle.color，由 visualMap 自动控制
-      data: mapData.value,  // 这里的 mapData 需要输出原始值，不要带 itemStyle.color
+      data: mapData.value,
     }],
   }
 })
@@ -161,7 +169,8 @@ const rangeFilterActive = computed(() => {
 const activeCountryCount = computed(() => {
   if (!rangeFilterActive.value) return props.data.length
   return props.data.filter((record) => {
-    const value = record[props.metric] as number
+    const value = record[props.metric]
+    if (!Number.isFinite(value)) return false
     return rangeDefinitions.value.some((range, index) => {
       if (props.rangeSelection?.[String(index)] === false) return false
       return isValueInMetricRange(value, range)
@@ -170,7 +179,7 @@ const activeCountryCount = computed(() => {
 })
 
 function handleClick(params: any) {
-  const rawCountry = params.data?.rawCountry
+  const rawCountry = params.data?.record ? params.data.rawCountry : null
   if (rawCountry) {
     emit('selectCountry', rawCountry)
   }
@@ -200,7 +209,7 @@ function handleRangeSelection(params: any) {
       <div>
         <div class="section-kicker"><span>02</span> SPATIAL OVERVIEW</div>
         <h2>{{ metricDefinitions[metric].label }} across countries</h2>
-        <p>{{ metricDefinitions[metric].description }}. Grey areas are outside the current dataset.</p>
+        <p>{{ metricDefinitions[metric].description }}. Grey areas have no value for the selected metric.</p>
       </div>
       <div class="map-hint">Drag to pan · scroll to zoom</div>
     </header>
@@ -226,7 +235,7 @@ function handleRangeSelection(params: any) {
 
     <footer class="panel-foot">
       <span><i class="legend-dot selected"></i>Selected: {{ selectedCountry }}</span>
-      <span><i class="legend-dot neutral"></i>No value available</span>
+      <span><i class="legend-dot neutral"></i>No data for selected metric</span>
       <span class="range-filter-note">
         <b v-if="rangeFilterActive">Color filter active · {{ activeCountryCount }} countries</b>
         <template v-else>Click color ranges to include or exclude them from analysis.</template>

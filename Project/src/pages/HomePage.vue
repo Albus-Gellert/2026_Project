@@ -54,7 +54,7 @@
         <div class="preview-grid">
           <article>
             <span>Geographic view</span>
-            <strong>179 countries</strong>
+            <strong>195 countries</strong>
           </article>
           <article>
             <span>Focused profile</span>

@@ -14,8 +14,10 @@ const emit = defineEmits<{
   selectCountry: [country: string]
 }>()
 
+const validData = computed(() => props.data.filter((record) => Number.isFinite(record[props.metric])))
+
 const rankedData = computed(() => {
-  const sorted = [...props.data].sort((a, b) => (b[props.metric] as number) - (a[props.metric] as number))
+  const sorted = [...validData.value].sort((a, b) => (b[props.metric] ?? 0) - (a[props.metric] ?? 0))
   const top = sorted.slice(0, 10)
   const selected = sorted.find((record) => record.country === props.selectedCountry)
   if (selected && !top.includes(selected)) top.push(selected)
@@ -35,10 +37,10 @@ const option = computed(() => ({
     formatter: (params: any) => {
       const record = rankedData.value[params.dataIndex]
       if (!record) return ''
-      const globalRank = [...props.data]
-        .sort((a, b) => (b[props.metric] as number) - (a[props.metric] as number))
+      const globalRank = [...validData.value]
+        .sort((a, b) => (b[props.metric] ?? 0) - (a[props.metric] ?? 0))
         .findIndex((item) => item.country === record.country) + 1
-      return `<strong>${record.country}</strong><br/><span style="color:#bdc9c8">Rank ${globalRank} of ${props.data.length}</span><br/><span style="display:block;margin-top:6px">${formatMetric(record[props.metric] as number, props.metric)}</span>`
+      return `<strong>${record.country}</strong><br/><span style="color:#bdc9c8">Rank ${globalRank} of ${validData.value.length}</span><br/><span style="display:block;margin-top:6px">${formatMetric(record[props.metric], props.metric)}</span>`
     },
   },
   xAxis: {

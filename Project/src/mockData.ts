@@ -1,5 +1,5 @@
 // mockData.ts  —  按国家名称首字母排序，名称已对齐世界地图
-import type { CountryYearRecord, Region } from './types'
+import type { Region } from './types'
 
 interface CountryBase {
   country: string
@@ -213,7 +213,9 @@ function rounded(value: number, decimals = 2): number {
   return Number(value.toFixed(decimals))
 }
 
-export const mockData: CountryYearRecord[] = countryBases.flatMap((base) => {
+// Legacy prototype data retained only for historical reference. The application
+// runtime imports src/aquastatData.ts instead.
+export const mockData = countryBases.flatMap((base) => {
   const signature = [...base.iso3].reduce((total, character) => total + character.charCodeAt(0), 0)
   return years.map((year, index) => {
     const yearsFromBase = year - 2022

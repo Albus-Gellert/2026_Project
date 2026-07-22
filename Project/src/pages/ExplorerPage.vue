@@ -8,7 +8,8 @@ import CountryProfile from '../components/CountryProfile.vue'
 import RankingChart from '../components/RankingChart.vue'
 import RelationshipScatter from '../components/RelationshipScatter.vue'
 import FindingsPanel from '../components/FindingsPanel.vue'
-import { mockData, regions, years } from '../mockData'
+import { aquastatData, regions, years } from '../aquastatData'
+import { isValueInMetricRange } from '../metricConfig'
 import type { MapRangeFilter, MetricKey, MetricRange } from '../types'
 
 const DEFAULTS = {
@@ -29,18 +30,16 @@ const selectedYMetric = ref<MetricKey>(DEFAULTS.yMetric)
 const mapRangeSelection = ref<Record<string, boolean> | null>(null)
 const activeMetricRanges = ref<MetricRange[] | null>(null)
 
-const yearData = computed(() => mockData.filter((record) => record.year === selectedYear.value))
+const yearData = computed(() => aquastatData.filter((record) => record.year === selectedYear.value))
 const filteredData = computed(() => yearData.value.filter((record) => {
   return selectedRegion.value === 'All regions' || record.region === selectedRegion.value
 }))
 const analysisData = computed(() => {
   if (activeMetricRanges.value === null) return filteredData.value
   return filteredData.value.filter((record) => {
-    const value = record[selectedMetric.value] as number
+    const value = record[selectedMetric.value]
     return activeMetricRanges.value?.some((range) => {
-      const meetsMinimum = range.includeMin ? value >= range.min : value > range.min
-      const meetsMaximum = range.includeMax ? value <= range.max : value < range.max
-      return meetsMinimum && meetsMaximum
+      return isValueInMetricRange(value, range)
     })
   })
 })
@@ -59,9 +58,10 @@ watch([selectedYear, selectedRegion, selectedMetric], clearMapRangeFilter, { flu
 
 watch(filteredData, (records) => {
   if (!records.some((record) => record.country === selectedCountry.value)) {
-    const next = [...records].sort((a, b) => {
-      return (b[selectedMetric.value] as number) - (a[selectedMetric.value] as number)
-    })[0]
+    const next = records
+      .filter((record) => Number.isFinite(record[selectedMetric.value]))
+      .sort((a, b) => (b[selectedMetric.value] ?? 0) - (a[selectedMetric.value] ?? 0))[0]
+      ?? records[0]
     if (next) selectedCountry.value = next.country
   }
 }, { immediate: true })

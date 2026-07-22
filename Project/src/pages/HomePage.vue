@@ -1,3 +1,10 @@
+<script setup lang="ts">
+import { mockData, years } from '../mockData'
+
+const latestYear = Math.max(...years)
+const countryCount = new Set(mockData.map((record) => record.iso3)).size
+</script>
+
 <template>
   <div class="landing-page">
     <header class="landing-header">
@@ -8,7 +15,7 @@
           <strong>Water Stress Explorer</strong>
         </span>
       </RouterLink>
-      <span class="landing-scope">Global water indicators · 2022</span>
+      <span class="landing-scope">Global water indicators · {{ latestYear }}</span>
     </header>
 
     <main class="landing-main">
@@ -54,7 +61,7 @@
         <div class="preview-grid">
           <article>
             <span>Geographic view</span>
-            <strong>179 countries</strong>
+            <strong>{{ countryCount }} countries</strong>
           </article>
           <article>
             <span>Focused profile</span>

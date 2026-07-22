@@ -12,7 +12,7 @@ import { mockData, regions, years } from '../mockData'
 import type { MapRangeFilter, MetricKey, MetricRange } from '../types'
 
 const DEFAULTS = {
-  year: 2022,
+  year: Math.max(...years),
   region: 'All regions',
   metric: 'waterStress' as MetricKey,
   country: 'Jordan',

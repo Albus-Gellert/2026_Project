@@ -17,35 +17,30 @@ const emit = defineEmits<{
   selectCountry: [country: string]
 }>()
 
-const plotData = computed(() => props.data.filter((record) => (
-  Number.isFinite(record[props.xMetric]) && Number.isFinite(record[props.yMetric])
-)))
-
 function useLogAxis(metric: MetricKey) {
-  const values = plotData.value.map((record) => record[metric] as number)
-  if (!values.length || values.some((value) => value <= 0)) return false
+  const values = props.data.map((record) => record[metric] as number).filter((value) => value > 0)
   return Math.max(...values) / Math.min(...values) > 100
 }
 
 const option = computed(() => {
-  const activeRegions = new Set(plotData.value.map((record) => record.region))
+  const activeRegions = new Set(props.data.map((record) => record.region))
   const grouped = Object.entries(regionColors)
     .filter(([region]) => activeRegions.has(region as CountryYearRecord['region']))
     .map(([region, color]) => ({
       name: region,
       type: 'scatter',
       symbolSize: (value: any[]) => Math.max(8, Math.min(23, 7 + Math.log10((value[4] as number) + 1) * 4)),
-      data: plotData.value
+      data: props.data
         .filter((record) => record.region === region && record.country !== props.selectedCountry)
         .map((record) => ({
           name: record.country,
-          value: [record[props.xMetric], record[props.yMetric], record.country, record.region, record.population ?? 0],
+          value: [record[props.xMetric], record[props.yMetric], record.country, record.region, record.population],
         })),
       itemStyle: { color, opacity: .76, borderColor: '#fffdf9', borderWidth: 1 },
       emphasis: { scale: 1.35, itemStyle: { opacity: 1, borderColor: '#20383b', borderWidth: 2 } },
     }))
 
-  const selected = plotData.value.find((record) => record.country === props.selectedCountry)
+  const selected = props.data.find((record) => record.country === props.selectedCountry)
   const selectedSeries = selected ? [{
     name: 'Selected country',
     type: 'scatter',
@@ -53,7 +48,7 @@ const option = computed(() => {
     z: 8,
     data: [{
       name: selected.country,
-      value: [selected[props.xMetric], selected[props.yMetric], selected.country, selected.region, selected.population ?? 0],
+      value: [selected[props.xMetric], selected[props.yMetric], selected.country, selected.region, selected.population],
     }],
     itemStyle: { color: '#c3a15b', borderColor: '#20383b', borderWidth: 3 },
     label: {

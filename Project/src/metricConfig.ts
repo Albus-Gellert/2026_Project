@@ -1,4 +1,4 @@
-import type { CountryYearRecord, MetricDefinition, MetricKey, MetricRange, MetricValue } from './types'
+import type { CountryYearRecord, MetricDefinition, MetricKey, MetricRange } from './types'
 
 export interface MetricColorRange extends MetricRange {
   label: string
@@ -103,9 +103,9 @@ export const metricDefinitions: Record<MetricKey, MetricDefinition> = {
     key: 'waterUseEfficiency',
     label: 'Water-use efficiency',
     shortLabel: 'Use efficiency',
-    unit: 'US$/m³',
+    unit: 'index',
     decimals: 1,
-    description: 'Economic value generated per cubic metre of water used',
+    description: 'Water-use efficiency index for cross-country comparison',
     palette: ['#e8ebeb', '#b4c0c2', '#7c9198', '#526970'],
     rankTitle: 'Top countries by water-use efficiency',
   },
@@ -147,23 +147,21 @@ export const regionColors: Record<string, string> = {
   'Oceania': '#7c9a78',
 }
 
-export function formatMetric(value: MetricValue, key: MetricKey, compact = false): string {
-  if (!Number.isFinite(value)) return 'N/A'
+export function formatMetric(value: number, key: MetricKey, compact = false): string {
   const definition = metricDefinitions[key]
   const number = new Intl.NumberFormat('en-US', {
     notation: compact ? 'compact' : 'standard',
     maximumFractionDigits: compact ? 1 : definition.decimals,
     minimumFractionDigits: compact ? 0 : Math.min(definition.decimals, 1),
-  }).format(value as number)
+  }).format(value)
   return definition.unit === '%' ? `${number}%` : `${number} ${definition.unit}`
 }
 
-export function formatPlain(value: MetricValue, decimals = 1): string {
-  if (!Number.isFinite(value)) return 'N/A'
+export function formatPlain(value: number, decimals = 1): string {
   return new Intl.NumberFormat('en-US', {
     maximumFractionDigits: decimals,
     minimumFractionDigits: decimals,
-  }).format(value as number)
+  }).format(value)
 }
 
 const QUANTILE_STYLES = [
@@ -174,11 +172,9 @@ const QUANTILE_STYLES = [
   { color: '#4e877c', surface: '#edf4f2', foreground: '#355f57' },
 ]
 
-export function isValueInMetricRange(value: MetricValue, range: MetricRange): boolean {
-  if (!Number.isFinite(value)) return false
-  const numericValue = value as number
-  const meetsMinimum = range.includeMin ? numericValue >= range.min : numericValue > range.min
-  const meetsMaximum = range.includeMax ? numericValue <= range.max : numericValue < range.max
+export function isValueInMetricRange(value: number, range: MetricRange): boolean {
+  const meetsMinimum = range.includeMin ? value >= range.min : value > range.min
+  const meetsMaximum = range.includeMax ? value <= range.max : value < range.max
   return meetsMinimum && meetsMaximum
 }
 
@@ -186,8 +182,8 @@ export function getMetricColorRanges(metric: MetricKey, data: CountryYearRecord[
   if (metric === 'waterStress') return waterStressCategories
 
   const values = data
-    .map((record) => record[metric])
-    .filter((value): value is number => Number.isFinite(value))
+    .map((record) => record[metric] as number)
+    .filter(Number.isFinite)
     .sort((a, b) => a - b)
   if (!values.length) return []
 
@@ -227,7 +223,7 @@ export function getMetricColorRanges(metric: MetricKey, data: CountryYearRecord[
   })
 }
 
-export function getMetricColorRange(value: MetricValue, metric: MetricKey, data: CountryYearRecord[]): MetricColorRange {
+export function getMetricColorRange(value: number, metric: MetricKey, data: CountryYearRecord[]): MetricColorRange {
   const ranges = getMetricColorRanges(metric, data)
   return ranges.find((range) => isValueInMetricRange(value, range))
     ?? ranges[0]

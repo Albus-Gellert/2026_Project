@@ -25,23 +25,18 @@ const sectorChartStyle = {
   },
 }
 
-function isFiniteNumber(value: unknown): value is number {
-  return typeof value === 'number' && Number.isFinite(value)
-}
-
-function average(key: MetricKey): number | null {
+function average(key: MetricKey): number {
   const values = regionalData.value
-    .map((item) => item[key])
-    .filter(isFiniteNumber)
-  if (!values.length) return null
+    .map((item) => item[key] as number)
+    .filter(Number.isFinite)
+  if (!values.length) return 0
   return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 
 const rank = computed(() => {
-  if (!record.value || !isFiniteNumber(record.value[props.activeMetric])) return null
-  return props.data
-    .filter((item) => isFiniteNumber(item[props.activeMetric]))
-    .sort((a, b) => (b[props.activeMetric] ?? 0) - (a[props.activeMetric] ?? 0))
+  if (!record.value) return 0
+  return [...props.data]
+    .sort((a, b) => (b[props.activeMetric] as number) - (a[props.activeMetric] as number))
     .findIndex((item) => item.country === record.value?.country) + 1
 })
 
@@ -49,17 +44,7 @@ const metricDisplayInfo = computed(() => {
   if (!record.value) return null
 
   const definition = metricDefinitions[props.activeMetric]
-  const value = record.value[props.activeMetric]
-  if (!isFiniteNumber(value)) {
-    return {
-      label: definition.label,
-      value: 'N/A',
-      categoryName: 'No data available',
-      color: '#9ca7a5',
-      surface: '#eef0ee',
-      foreground: '#667371',
-    }
-  }
+  const value = record.value[props.activeMetric] as number
   const colorRange = getMetricColorRange(value, props.activeMetric, props.data)
   const { color, surface, foreground } = colorRange
   let categoryName: string | null = null
@@ -82,11 +67,6 @@ const metricDisplayInfo = computed(() => {
 const sectorOption = computed(() => {
   if (!record.value) return {}
   const selected = record.value
-  const sectorData = [
-    { name: 'Agriculture', value: selected.agriculturalWithdrawal, itemStyle: { color: sectorChartStyle.colors.agriculture } },
-    { name: 'Industry', value: selected.industrialWithdrawal, itemStyle: { color: sectorChartStyle.colors.industry } },
-    { name: 'Municipal', value: selected.municipalWithdrawal, itemStyle: { color: sectorChartStyle.colors.municipal } },
-  ].filter((item) => isFiniteNumber(item.value))
   return {
     animationDurationUpdate: 350,
     textStyle: { fontFamily: 'Segoe UI Variable, Segoe UI, sans-serif' },
@@ -113,7 +93,11 @@ const sectorOption = computed(() => {
       avoidLabelOverlap: true,
       label: { show: false },
       itemStyle: { borderColor: '#fff', borderWidth: 2 },
-      data: sectorData,
+      data: [
+        { name: 'Agriculture', value: selected.agriculturalWithdrawal, itemStyle: { color: sectorChartStyle.colors.agriculture } },
+        { name: 'Industry', value: selected.industrialWithdrawal, itemStyle: { color: sectorChartStyle.colors.industry } },
+        { name: 'Municipal', value: selected.municipalWithdrawal, itemStyle: { color: sectorChartStyle.colors.municipal } },
+      ],
     }],
   }
 })
@@ -121,29 +105,25 @@ const sectorOption = computed(() => {
 const comparisons = computed(() => {
   if (!record.value) return []
   const selected = record.value
-  const resourcesPerCapita = isFiniteNumber(selected.renewableWaterResources)
-    && isFiniteNumber(selected.population)
-    && selected.population > 0
-    ? selected.renewableWaterResources / selected.population
-    : null
   return [
     { label: 'Water stress', value: selected.waterStress, benchmark: average('waterStress'), unit: '%' },
-    { label: 'Use efficiency', value: selected.waterUseEfficiency, benchmark: average('waterUseEfficiency'), unit: 'US$/m³' },
-    { label: 'Resources / capita', value: resourcesPerCapita, benchmark: averagePerCapita(), unit: 'thousand m³' },
+    { label: 'Use efficiency', value: selected.waterUseEfficiency, benchmark: average('waterUseEfficiency'), unit: 'index' },
+    { label: 'Resources / capita', value: selected.renewableWaterResources / selected.population, benchmark: averagePerCapita(), unit: 'thousand m³' },
   ].map((item) => ({
     ...item,
-    available: isFiniteNumber(item.value),
-    countryPosition: isFiniteNumber(item.value) && isFiniteNumber(item.benchmark) && item.benchmark > 0
+    // The selected country's continental mean is the fixed midpoint.
+    countryPosition: item.benchmark > 0
       ? Math.min(Math.max(item.value / item.benchmark * 50, 0), 100)
-      : 0,
+      : item.value > 0 ? 100 : 50,
   }))
 })
 
-function averagePerCapita(): number | null {
+function averagePerCapita(): number {
   const values = regionalData.value
-    .filter((item) => isFiniteNumber(item.population) && item.population > 0 && isFiniteNumber(item.renewableWaterResources))
-    .map((item) => (item.renewableWaterResources as number) / (item.population as number))
-  if (!values.length) return null
+    .filter((item) => item.population > 0)
+    .map((item) => item.renewableWaterResources / item.population)
+    .filter(Number.isFinite)
+  if (!values.length) return 0
   return values.reduce((sum, value) => sum + value, 0) / values.length
 }
 </script>
@@ -155,11 +135,11 @@ function averagePerCapita(): number | null {
         <div>
           <div class="section-kicker"><span>03</span> COUNTRY PROFILE</div>
           <h2>{{ record.country }}</h2>
-          <p>{{ record.region }}</p>
+          <p>{{ record.region }} · {{ record.iso3 }}</p>
         </div>
         <div class="rank-chip">
           <span>Scope rank</span>
-          <strong>{{ rank === null ? 'N/A' : `#${rank}` }}</strong>
+          <strong>#{{ rank }}</strong>
           <small>by {{ metricDefinitions[activeMetric].shortLabel.toLowerCase() }}</small>
         </div>
       </header>
@@ -196,7 +176,7 @@ function averagePerCapita(): number | null {
         <div class="indicator">
           <span>Use efficiency</span>
           <strong>{{ formatPlain(record.waterUseEfficiency, 1) }}</strong>
-          <small>US$/m³</small>
+          <small>efficiency index</small>
         </div>
         <div class="indicator">
           <span>Irrigated area</span>
@@ -236,8 +216,8 @@ function averagePerCapita(): number | null {
             </div>
           </div>
           <div class="benchmark-track">
-            <span v-if="item.available" class="country-bar" :style="{ width: `${item.countryPosition}%` }"></span>
-            <i v-if="item.benchmark !== null" class="average-marker"></i>
+            <span class="country-bar" :style="{ width: `${item.countryPosition}%` }"></span>
+            <i class="average-marker"></i>
           </div>
         </div>
       </div>
